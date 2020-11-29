@@ -20,7 +20,7 @@ import (
 
 const (
 	OPEN_TRACING_PARAMS_MARKER = "@openTracingParams"
-	APP_ERROR_TYPE             = "*model.AppError"
+	APP_ERROR_TYPE             = "error"
 	ERROR_TYPE                 = "error"
 )
 

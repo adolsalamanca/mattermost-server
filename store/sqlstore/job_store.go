@@ -5,7 +5,6 @@ package sqlstore
 
 import (
 	"database/sql"
-	"net/http"
 
 	sq "github.com/Masterminds/squirrel"
 
@@ -36,14 +35,14 @@ func (jss SqlJobStore) createIndexesIfNotExists() {
 	jss.CreateIndexIfNotExists("idx_jobs_type", "Jobs", "Type")
 }
 
-func (jss SqlJobStore) Save(job *model.Job) (*model.Job, *model.AppError) {
+func (jss SqlJobStore) Save(job *model.Job) (*model.Job, error) {
 	if err := jss.GetMaster().Insert(job); err != nil {
-		return nil, model.NewAppError("SqlJobStore.Save", "store.sql_job.save.app_error", nil, "id="+job.Id+", "+err.Error(), http.StatusInternalServerError)
+		return nil, err
 	}
 	return job, nil
 }
 
-func (jss SqlJobStore) UpdateOptimistically(job *model.Job, currentStatus string) (bool, *model.AppError) {
+func (jss SqlJobStore) UpdateOptimistically(job *model.Job, currentStatus string) (bool, error) {
 	sql, args, err := jss.getQueryBuilder().
 		Update("Jobs").
 		Set("LastActivityAt", model.GetMillis()).
@@ -52,17 +51,17 @@ func (jss SqlJobStore) UpdateOptimistically(job *model.Job, currentStatus string
 		Set("Progress", job.Progress).
 		Where(sq.Eq{"Id": job.Id, "Status": currentStatus}).ToSql()
 	if err != nil {
-		return false, model.NewAppError("SqlJobStore.UpdateOptimistically", "store.sql.build_query.app_error", nil, err.Error(), http.StatusInternalServerError)
+		return false, err
 	}
 	sqlResult, err := jss.GetMaster().Exec(sql, args...)
 	if err != nil {
-		return false, model.NewAppError("SqlJobStore.UpdateOptimistically", "store.sql_job.update.app_error", nil, "id="+job.Id+", "+err.Error(), http.StatusInternalServerError)
+		return false, err
 	}
 
 	rows, err := sqlResult.RowsAffected()
 
 	if err != nil {
-		return false, model.NewAppError("SqlJobStore.UpdateStatus", "store.sql_job.update.app_error", nil, "id="+job.Id+", "+err.Error(), http.StatusInternalServerError)
+		return false, err
 	}
 
 	if rows != 1 {
@@ -72,7 +71,7 @@ func (jss SqlJobStore) UpdateOptimistically(job *model.Job, currentStatus string
 	return true, nil
 }
 
-func (jss SqlJobStore) UpdateStatus(id string, status string) (*model.Job, *model.AppError) {
+func (jss SqlJobStore) UpdateStatus(id string, status string) (*model.Job, error) {
 	job := &model.Job{
 		Id:             id,
 		Status:         status,
@@ -82,13 +81,13 @@ func (jss SqlJobStore) UpdateStatus(id string, status string) (*model.Job, *mode
 	if _, err := jss.GetMaster().UpdateColumns(func(col *gorp.ColumnMap) bool {
 		return col.ColumnName == "Status" || col.ColumnName == "LastActivityAt"
 	}, job); err != nil {
-		return nil, model.NewAppError("SqlJobStore.UpdateStatus", "store.sql_job.update.app_error", nil, "id="+id+", "+err.Error(), http.StatusInternalServerError)
+		return nil, err
 	}
 
 	return job, nil
 }
 
-func (jss SqlJobStore) UpdateStatusOptimistically(id string, currentStatus string, newStatus string) (bool, *model.AppError) {
+func (jss SqlJobStore) UpdateStatusOptimistically(id string, currentStatus string, newStatus string) (bool, error) {
 	sql := jss.getQueryBuilder().
 		Update("Jobs").
 		Set("LastActivityAt", model.GetMillis()).
@@ -100,16 +99,16 @@ func (jss SqlJobStore) UpdateStatusOptimistically(id string, currentStatus strin
 	}
 	query, args, err := sql.ToSql()
 	if err != nil {
-		return false, model.NewAppError("SqlJobStore.UpdateStatusOptimistically", "store.sql.build_query.app_error", nil, err.Error(), http.StatusInternalServerError)
+		return false, err
 	}
 
 	sqlResult, err := jss.GetMaster().Exec(query, args...)
 	if err != nil {
-		return false, model.NewAppError("SqlJobStore.UpdateStatusOptimistically", "store.sql_job.update.app_error", nil, "id="+id+", "+err.Error(), http.StatusInternalServerError)
+		return false, err
 	}
 	rows, err := sqlResult.RowsAffected()
 	if err != nil {
-		return false, model.NewAppError("SqlJobStore.UpdateStatus", "store.sql_job.update.app_error", nil, "id="+id+", "+err.Error(), http.StatusInternalServerError)
+		return false, err
 	}
 	if rows != 1 {
 		return false, nil
@@ -118,25 +117,25 @@ func (jss SqlJobStore) UpdateStatusOptimistically(id string, currentStatus strin
 	return true, nil
 }
 
-func (jss SqlJobStore) Get(id string) (*model.Job, *model.AppError) {
+func (jss SqlJobStore) Get(id string) (*model.Job, error) {
 	query, args, err := jss.getQueryBuilder().
 		Select("*").
 		From("Jobs").
 		Where(sq.Eq{"Id": id}).ToSql()
 	if err != nil {
-		return nil, model.NewAppError("SqlJobStore.Get", "store.sql.build_query.app_error", nil, err.Error(), http.StatusInternalServerError)
+		return nil, err
 	}
 	var status *model.Job
 	if err = jss.GetReplica().SelectOne(&status, query, args...); err != nil {
 		if err == sql.ErrNoRows {
-			return nil, model.NewAppError("SqlJobStore.Get", "store.sql_job.get.app_error", nil, "Id="+id+", "+err.Error(), http.StatusNotFound)
+			return nil, err
 		}
-		return nil, model.NewAppError("SqlJobStore.Get", "store.sql_job.get.app_error", nil, "Id="+id+", "+err.Error(), http.StatusInternalServerError)
+		return nil, err
 	}
 	return status, nil
 }
 
-func (jss SqlJobStore) GetAllPage(offset int, limit int) ([]*model.Job, *model.AppError) {
+func (jss SqlJobStore) GetAllPage(offset int, limit int) ([]*model.Job, error) {
 	query, args, err := jss.getQueryBuilder().
 		Select("*").
 		From("Jobs").
@@ -144,33 +143,33 @@ func (jss SqlJobStore) GetAllPage(offset int, limit int) ([]*model.Job, *model.A
 		Limit(uint64(limit)).
 		Offset(uint64(offset)).ToSql()
 	if err != nil {
-		return nil, model.NewAppError("SqlJobStore.GetAllPage", "store.sql.build_query.app_error", nil, err.Error(), http.StatusInternalServerError)
+		return nil, err
 	}
 
 	var statuses []*model.Job
 	if _, err = jss.GetReplica().Select(&statuses, query, args...); err != nil {
-		return nil, model.NewAppError("SqlJobStore.GetAllPage", "store.sql_job.get_all.app_error", nil, err.Error(), http.StatusInternalServerError)
+		return nil, err
 	}
 	return statuses, nil
 }
 
-func (jss SqlJobStore) GetAllByType(jobType string) ([]*model.Job, *model.AppError) {
+func (jss SqlJobStore) GetAllByType(jobType string) ([]*model.Job, error) {
 	query, args, err := jss.getQueryBuilder().
 		Select("*").
 		From("Jobs").
 		Where(sq.Eq{"Type": jobType}).
 		OrderBy("CreateAt DESC").ToSql()
 	if err != nil {
-		return nil, model.NewAppError("SqlJobStore.GetAllByType", "store.sql.build_query.app_error", nil, err.Error(), http.StatusInternalServerError)
+		return nil, err
 	}
 	var statuses []*model.Job
 	if _, err = jss.GetReplica().Select(&statuses, query, args...); err != nil {
-		return nil, model.NewAppError("SqlJobStore.GetAllByType", "store.sql_job.get_all.app_error", nil, "Type="+jobType+", "+err.Error(), http.StatusInternalServerError)
+		return nil, err
 	}
 	return statuses, nil
 }
 
-func (jss SqlJobStore) GetAllByTypePage(jobType string, offset int, limit int) ([]*model.Job, *model.AppError) {
+func (jss SqlJobStore) GetAllByTypePage(jobType string, offset int, limit int) ([]*model.Job, error) {
 	query, args, err := jss.getQueryBuilder().
 		Select("*").
 		From("Jobs").
@@ -179,17 +178,17 @@ func (jss SqlJobStore) GetAllByTypePage(jobType string, offset int, limit int) (
 		Limit(uint64(limit)).
 		Offset(uint64(offset)).ToSql()
 	if err != nil {
-		return nil, model.NewAppError("SqlJobStore.GetAllByTypePage", "store.sql.build_query.app_error", nil, err.Error(), http.StatusInternalServerError)
+		return nil, err
 	}
 
 	var statuses []*model.Job
 	if _, err = jss.GetReplica().Select(&statuses, query, args...); err != nil {
-		return nil, model.NewAppError("SqlJobStore.GetAllByTypePage", "store.sql_job.get_all.app_error", nil, "Type="+jobType+", "+err.Error(), http.StatusInternalServerError)
+		return nil, err
 	}
 	return statuses, nil
 }
 
-func (jss SqlJobStore) GetAllByStatus(status string) ([]*model.Job, *model.AppError) {
+func (jss SqlJobStore) GetAllByStatus(status string) ([]*model.Job, error) {
 	var statuses []*model.Job
 	query, args, err := jss.getQueryBuilder().
 		Select("*").
@@ -197,16 +196,16 @@ func (jss SqlJobStore) GetAllByStatus(status string) ([]*model.Job, *model.AppEr
 		Where(sq.Eq{"Status": status}).
 		OrderBy("CreateAt ASC").ToSql()
 	if err != nil {
-		return nil, model.NewAppError("SqlJobStore.GetAllByStatus", "store.sql.build_query.app_error", nil, err.Error(), http.StatusInternalServerError)
+		return nil, err
 	}
 
 	if _, err = jss.GetReplica().Select(&statuses, query, args...); err != nil {
-		return nil, model.NewAppError("SqlJobStore.GetAllByStatus", "store.sql_job.get_all.app_error", nil, "Status="+status+", "+err.Error(), http.StatusInternalServerError)
+		return nil, err
 	}
 	return statuses, nil
 }
 
-func (jss SqlJobStore) GetNewestJobByStatusAndType(status string, jobType string) (*model.Job, *model.AppError) {
+func (jss SqlJobStore) GetNewestJobByStatusAndType(status string, jobType string) (*model.Job, error) {
 	query, args, err := jss.getQueryBuilder().
 		Select("*").
 		From("Jobs").
@@ -214,41 +213,41 @@ func (jss SqlJobStore) GetNewestJobByStatusAndType(status string, jobType string
 		OrderBy("CreateAt DESC").
 		Limit(1).ToSql()
 	if err != nil {
-		return nil, model.NewAppError("SqlJobStore.GetNewestJobByStatusAndType", "store.sql.build_query.app_error", nil, err.Error(), http.StatusInternalServerError)
+		return nil, err
 	}
 
 	var job *model.Job
 	if err = jss.GetReplica().SelectOne(&job, query, args...); err != nil && err != sql.ErrNoRows {
-		return nil, model.NewAppError("SqlJobStore.GetNewestJobByStatusAndType", "store.sql_job.get_newest_job_by_status_and_type.app_error", nil, "Status="+status+", "+err.Error(), http.StatusInternalServerError)
+		return nil, err
 	}
 	return job, nil
 }
 
-func (jss SqlJobStore) GetCountByStatusAndType(status string, jobType string) (int64, *model.AppError) {
+func (jss SqlJobStore) GetCountByStatusAndType(status string, jobType string) (int64, error) {
 	query, args, err := jss.getQueryBuilder().
 		Select("COUNT(*)").
 		From("Jobs").
 		Where(sq.Eq{"Status": status, "Type": jobType}).ToSql()
 	if err != nil {
-		return 0, model.NewAppError("SqlJobStore.GetCountByStatusAndType", "store.sql.build_query.app_error", nil, err.Error(), http.StatusInternalServerError)
+		return 0, err
 	}
 	count, err := jss.GetReplica().SelectInt(query, args...)
 	if err != nil {
-		return int64(0), model.NewAppError("SqlJobStore.GetCountByStatusAndType", "store.sql_job.get_count_by_status_and_type.app_error", nil, "Status="+status+", "+err.Error(), http.StatusInternalServerError)
+		return int64(0), err
 	}
 	return count, nil
 }
 
-func (jss SqlJobStore) Delete(id string) (string, *model.AppError) {
+func (jss SqlJobStore) Delete(id string) (string, error) {
 	sql, args, err := jss.getQueryBuilder().
 		Delete("Jobs").
 		Where(sq.Eq{"Id": id}).ToSql()
 	if err != nil {
-		return "", model.NewAppError("SqlJobStore.DeleteByType", "store.sql.build_query.app_error", nil, err.Error(), http.StatusInternalServerError)
+		return "", err
 	}
 
 	if _, err = jss.GetMaster().Exec(sql, args...); err != nil {
-		return "", model.NewAppError("SqlJobStore.DeleteByType", "store.sql_job.delete.app_error", nil, "id="+id+", "+err.Error(), http.StatusInternalServerError)
+		return "", err
 	}
 	return id, nil
 }

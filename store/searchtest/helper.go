@@ -147,26 +147,26 @@ func (th *SearchTestHelper) CleanFixtures() error {
 }
 
 func (th *SearchTestHelper) createTeam(name, displayName, teamType string) (*model.Team, error) {
-	team, appError := th.Store.Team().Save(&model.Team{
+	team, err := th.Store.Team().Save(&model.Team{
 		Name:        name,
 		DisplayName: displayName,
 		Type:        teamType,
 	})
-	if appError != nil {
-		return nil, errors.New(appError.Error())
+	if err != nil {
+		return nil, errors.New(err.Error())
 	}
 
 	return team, nil
 }
 
 func (th *SearchTestHelper) deleteTeam(team *model.Team) error {
-	appError := th.Store.Team().RemoveAllMembersByTeam(team.Id)
-	if appError != nil {
-		return errors.New(appError.Error())
+	err := th.Store.Team().RemoveAllMembersByTeam(team.Id)
+	if err != nil {
+		return err
 	}
-	appError = th.Store.Team().PermanentDelete(team.Id)
-	if appError != nil {
-		return errors.New(appError.Error())
+	err = th.Store.Team().PermanentDelete(team.Id)
+	if err != nil {
+		return err
 	}
 
 	return nil
@@ -177,7 +177,7 @@ func (th *SearchTestHelper) makeEmail() string {
 }
 
 func (th *SearchTestHelper) createUser(username, nickname, firstName, lastName string) (*model.User, error) {
-	user, appError := th.Store.User().Save(&model.User{
+	user, err := th.Store.User().Save(&model.User{
 		Username:  username,
 		Password:  username,
 		Nickname:  nickname,
@@ -185,15 +185,15 @@ func (th *SearchTestHelper) createUser(username, nickname, firstName, lastName s
 		LastName:  lastName,
 		Email:     th.makeEmail(),
 	})
-	if appError != nil {
-		return nil, errors.New(appError.Error())
+	if err != nil {
+		return nil, err
 	}
 
 	return user, nil
 }
 
 func (th *SearchTestHelper) createGuest(username, nickname, firstName, lastName string) (*model.User, error) {
-	user, appError := th.Store.User().Save(&model.User{
+	user, err := th.Store.User().Save(&model.User{
 		Username:  username,
 		Password:  username,
 		Nickname:  nickname,
@@ -202,26 +202,26 @@ func (th *SearchTestHelper) createGuest(username, nickname, firstName, lastName 
 		Email:     th.makeEmail(),
 		Roles:     model.SYSTEM_GUEST_ROLE_ID,
 	})
-	if appError != nil {
-		return nil, errors.New(appError.Error())
+	if err != nil {
+		return nil, err
 	}
 
 	return user, nil
 }
 
 func (th *SearchTestHelper) deleteUser(user *model.User) error {
-	appError := th.Store.User().PermanentDelete(user.Id)
-	if appError != nil {
-		return errors.New(appError.Error())
+	err := th.Store.User().PermanentDelete(user.Id)
+	if err != nil {
+		return err
 	}
 
 	return nil
 }
 
 func (th *SearchTestHelper) cleanAllUsers() error {
-	users, apperr := th.Store.User().GetAll()
-	if apperr != nil {
-		return apperr
+	users, err := th.Store.User().GetAll()
+	if err != nil {
+		return err
 	}
 
 	for _, u := range users {
@@ -241,16 +241,16 @@ func (th *SearchTestHelper) createBot(username, displayName, ownerID string) (*m
 		OwnerId:     ownerID,
 	}
 
-	user, apperr := th.Store.User().Save(model.UserFromBot(botModel))
-	if apperr != nil {
-		return nil, errors.New(apperr.Error())
+	user, err := th.Store.User().Save(model.UserFromBot(botModel))
+	if err != nil {
+		return nil, err
 	}
 
 	botModel.UserId = user.Id
-	bot, err := th.Store.Bot().Save(botModel)
-	if err != nil {
+	bot, err2 := th.Store.Bot().Save(botModel)
+	if err2 != nil {
 		th.Store.User().PermanentDelete(bot.UserId)
-		return nil, errors.New(err.Error())
+		return nil, err2
 	}
 
 	return bot, nil
@@ -259,27 +259,27 @@ func (th *SearchTestHelper) createBot(username, displayName, ownerID string) (*m
 func (th *SearchTestHelper) deleteBot(botID string) error {
 	err := th.Store.Bot().PermanentDelete(botID)
 	if err != nil {
-		return errors.New(err.Error())
+		return err
 	}
 	return nil
 }
 
 func (th *SearchTestHelper) createChannel(teamID, name, displayName, purpose, channelType string, deleted bool) (*model.Channel, error) {
-	channel, appError := th.Store.Channel().Save(&model.Channel{
+	channel, err := th.Store.Channel().Save(&model.Channel{
 		TeamId:      teamID,
 		DisplayName: displayName,
 		Name:        name,
 		Type:        channelType,
 		Purpose:     purpose,
 	}, 999)
-	if appError != nil {
-		return nil, errors.New(appError.Error())
+	if err != nil {
+		return nil, err
 	}
 
 	if deleted {
-		appError := th.Store.Channel().Delete(channel.Id, model.GetMillis())
-		if appError != nil {
-			return nil, errors.New(appError.Error())
+		err := th.Store.Channel().Delete(channel.Id, model.GetMillis())
+		if err != nil {
+			return nil, err
 		}
 	}
 
@@ -324,9 +324,9 @@ func (th *SearchTestHelper) createGroupChannel(teamID, displayName string, users
 		Type:        model.CHANNEL_GROUP,
 	}
 
-	channel, apperr := th.Store.Channel().Save(group, 10000)
-	if apperr != nil {
-		return nil, errors.New(apperr.Error())
+	channel, err := th.Store.Channel().Save(group, 10000)
+	if err != nil {
+		return nil, err
 	}
 
 	for _, user := range users {
@@ -341,14 +341,14 @@ func (th *SearchTestHelper) createGroupChannel(teamID, displayName string, users
 }
 
 func (th *SearchTestHelper) deleteChannel(channel *model.Channel) error {
-	appError := th.Store.Channel().PermanentDeleteMembersByChannel(channel.Id)
-	if appError != nil {
-		return errors.New(appError.Error())
-	}
-
-	err := th.Store.Channel().PermanentDelete(channel.Id)
+	err := th.Store.Channel().PermanentDeleteMembersByChannel(channel.Id)
 	if err != nil {
 		return err
+	}
+
+	err2 := th.Store.Channel().PermanentDelete(channel.Id)
+	if err2 != nil {
+		return err2
 	}
 
 	return nil
@@ -384,9 +384,9 @@ func (th *SearchTestHelper) createPost(userID, channelID, message, hashtags, pos
 		creationTime = createAt
 	}
 	postModel := th.createPostModel(userID, channelID, message, hashtags, postType, creationTime, pinned)
-	post, appError := th.Store.Post().Save(postModel)
-	if appError != nil {
-		return nil, errors.New(appError.Error())
+	post, err := th.Store.Post().Save(postModel)
+	if err != nil {
+		return nil, err
 	}
 
 	return post, nil
@@ -396,9 +396,9 @@ func (th *SearchTestHelper) createReply(userID, message, hashtags string, parent
 	replyModel := th.createPostModel(userID, parent.ChannelId, message, hashtags, parent.Type, createAt, pinned)
 	replyModel.ParentId = parent.Id
 	replyModel.RootId = parent.Id
-	reply, appError := th.Store.Post().Save(replyModel)
-	if appError != nil {
-		return nil, errors.New(appError.Error())
+	reply, err := th.Store.Post().Save(replyModel)
+	if err != nil {
+		return nil, err
 	}
 	return reply, nil
 }
@@ -406,7 +406,7 @@ func (th *SearchTestHelper) createReply(userID, message, hashtags string, parent
 func (th *SearchTestHelper) deleteUserPosts(userID string) error {
 	err := th.Store.Post().PermanentDeleteByUser(userID)
 	if err != nil {
-		return errors.New(err.Error())
+		return err
 	}
 	return nil
 }
@@ -415,7 +415,7 @@ func (th *SearchTestHelper) addUserToTeams(user *model.User, teamIDS []string) e
 	for _, teamID := range teamIDS {
 		_, err := th.Store.Team().SaveMember(&model.TeamMember{TeamId: teamID, UserId: user.Id}, -1)
 		if err != nil {
-			return errors.New(err.Error())
+			return err
 		}
 	}
 
@@ -432,7 +432,7 @@ func (th *SearchTestHelper) addUserToChannels(user *model.User, channelIDS []str
 			NotifyProps: model.GetDefaultChannelNotifyProps(),
 		})
 		if err != nil {
-			return nil, errors.New(err.Error())
+			return nil, err
 		}
 		channelMembers = append(channelMembers, cm)
 	}

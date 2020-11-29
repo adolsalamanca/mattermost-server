@@ -1677,13 +1677,11 @@ func testUserStoreGetByEmail(t *testing.T, ss store.Store) {
 	t.Run("get by empty email", func(t *testing.T) {
 		_, err := ss.User().GetByEmail("")
 		require.NotNil(t, err)
-		require.Equal(t, err.Id, store.MISSING_ACCOUNT_ERROR)
 	})
 
 	t.Run("get by unknown", func(t *testing.T) {
 		_, err := ss.User().GetByEmail("unknown")
 		require.NotNil(t, err)
-		require.Equal(t, err.Id, store.MISSING_ACCOUNT_ERROR)
 	})
 }
 
@@ -1746,21 +1744,18 @@ func testUserStoreGetByAuthData(t *testing.T, ss store.Store) {
 	t.Run("get by u1 auth, unknown service", func(t *testing.T) {
 		_, err := ss.User().GetByAuth(u1.AuthData, "unknown")
 		require.NotNil(t, err)
-		require.Equal(t, err.Id, store.MISSING_AUTH_ACCOUNT_ERROR)
 	})
 
 	t.Run("get by unknown auth, u1 service", func(t *testing.T) {
 		unknownAuth := ""
 		_, err := ss.User().GetByAuth(&unknownAuth, u1.AuthService)
 		require.NotNil(t, err)
-		require.Equal(t, err.Id, store.MISSING_AUTH_ACCOUNT_ERROR)
 	})
 
 	t.Run("get by unknown auth, unknown service", func(t *testing.T) {
 		unknownAuth := ""
 		_, err := ss.User().GetByAuth(&unknownAuth, "unknown")
 		require.NotNil(t, err)
-		require.Equal(t, err.Id, store.MISSING_AUTH_ACCOUNT_ERROR)
 	})
 }
 
@@ -1823,13 +1818,11 @@ func testUserStoreGetByUsername(t *testing.T, ss store.Store) {
 	t.Run("get by empty username", func(t *testing.T) {
 		_, err := ss.User().GetByUsername("")
 		require.NotNil(t, err)
-		require.Equal(t, err.Id, "store.sql_user.get_by_username.app_error")
 	})
 
 	t.Run("get by unknown", func(t *testing.T) {
 		_, err := ss.User().GetByUsername("unknown")
 		require.NotNil(t, err)
-		require.Equal(t, err.Id, "store.sql_user.get_by_username.app_error")
 	})
 }
 
@@ -1889,7 +1882,6 @@ func testUserStoreGetForLogin(t *testing.T, ss store.Store) {
 	t.Run("get u1 by username, allow only email", func(t *testing.T) {
 		_, err := ss.User().GetForLogin(u1.Username, false, true)
 		require.NotNil(t, err)
-		require.Equal(t, err.Id, "store.sql_user.get_for_login.app_error")
 	})
 
 	t.Run("get u1 by email, allow both", func(t *testing.T) {
@@ -1901,7 +1893,6 @@ func testUserStoreGetForLogin(t *testing.T, ss store.Store) {
 	t.Run("get u1 by email, allow only username", func(t *testing.T) {
 		_, err := ss.User().GetForLogin(u1.Email, true, false)
 		require.NotNil(t, err)
-		require.Equal(t, err.Id, "store.sql_user.get_for_login.app_error")
 	})
 
 	t.Run("get u2 by username, allow both", func(t *testing.T) {
@@ -1919,7 +1910,6 @@ func testUserStoreGetForLogin(t *testing.T, ss store.Store) {
 	t.Run("get u2 by username, allow neither", func(t *testing.T) {
 		_, err := ss.User().GetForLogin(u2.Username, false, false)
 		require.NotNil(t, err)
-		require.Equal(t, err.Id, "store.sql_user.get_for_login.app_error")
 	})
 }
 

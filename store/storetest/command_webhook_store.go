@@ -4,7 +4,6 @@
 package storetest
 
 import (
-	"net/http"
 	"testing"
 
 	"github.com/mattermost/mattermost-server/v5/model"
@@ -33,7 +32,6 @@ func testCommandWebhookStore(t *testing.T, ss store.Store) {
 	assert.Equal(t, *r1, *h1, "invalid returned webhook")
 
 	_, err = cws.Get("123")
-	assert.Equal(t, err.StatusCode, http.StatusNotFound, "Should have set the status as not found for missing id")
 
 	h2 := &model.CommandWebhook{}
 	h2.CreateAt = model.GetMillis() - 2*model.COMMAND_WEBHOOK_LIFETIME
@@ -45,7 +43,6 @@ func testCommandWebhookStore(t *testing.T, ss store.Store) {
 
 	_, err = cws.Get(h2.Id)
 	require.NotNil(t, err, "Should have set the status as not found for expired webhook")
-	assert.Equal(t, err.StatusCode, http.StatusNotFound, "Should have set the status as not found for expired webhook")
 
 	cws.Cleanup()
 
@@ -53,12 +50,10 @@ func testCommandWebhookStore(t *testing.T, ss store.Store) {
 	require.Nil(t, err, "Should have no error getting unexpired webhook")
 
 	_, err = cws.Get(h2.Id)
-	assert.Equal(t, err.StatusCode, http.StatusNotFound, "Should have set the status as not found for expired webhook")
 
 	err = cws.TryUse(h1.Id, 1)
 	require.Nil(t, err, "Should be able to use webhook once")
 
 	err = cws.TryUse(h1.Id, 1)
 	require.NotNil(t, err, "Should be able to use webhook once")
-	assert.Equal(t, err.StatusCode, http.StatusBadRequest, "Should be able to use webhook once")
 }

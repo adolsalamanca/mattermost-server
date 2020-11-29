@@ -31,7 +31,7 @@ func (s *SearchUserStore) deleteUserIndex(user *model.User) {
 	}
 }
 
-func (s *SearchUserStore) Search(teamId, term string, options *model.UserSearchOptions) ([]*model.User, *model.AppError) {
+func (s *SearchUserStore) Search(teamId, term string, options *model.UserSearchOptions) ([]*model.User, error) {
 	for _, engine := range s.rootStore.searchEngine.GetActiveEngines() {
 		if engine.IsSearchEnabled() {
 			listOfAllowedChannels, err := s.getListOfAllowedChannelsForTeam(teamId, options.ViewRestrictions)
@@ -68,7 +68,7 @@ func (s *SearchUserStore) Search(teamId, term string, options *model.UserSearchO
 	return s.UserStore.Search(teamId, term, options)
 }
 
-func (s *SearchUserStore) Update(user *model.User, trustedUpdateData bool) (*model.UserUpdate, *model.AppError) {
+func (s *SearchUserStore) Update(user *model.User, trustedUpdateData bool) (*model.UserUpdate, error) {
 	userUpdate, err := s.UserStore.Update(user, trustedUpdateData)
 
 	if err == nil {
@@ -77,7 +77,7 @@ func (s *SearchUserStore) Update(user *model.User, trustedUpdateData bool) (*mod
 	return userUpdate, err
 }
 
-func (s *SearchUserStore) Save(user *model.User) (*model.User, *model.AppError) {
+func (s *SearchUserStore) Save(user *model.User) (*model.User, error) {
 	nuser, err := s.UserStore.Save(user)
 
 	if err == nil {
@@ -86,7 +86,7 @@ func (s *SearchUserStore) Save(user *model.User) (*model.User, *model.AppError) 
 	return nuser, err
 }
 
-func (s *SearchUserStore) PermanentDelete(userId string) *model.AppError {
+func (s *SearchUserStore) PermanentDelete(userId string) error {
 	user, userErr := s.UserStore.Get(userId)
 	if userErr != nil {
 		mlog.Error("Encountered error deleting user", mlog.String("user_id", userId), mlog.Err(userErr))
@@ -98,8 +98,8 @@ func (s *SearchUserStore) PermanentDelete(userId string) *model.AppError {
 	return err
 }
 
-func (s *SearchUserStore) autocompleteUsersInChannelByEngine(engine searchengine.SearchEngineInterface, teamId, channelId, term string, options *model.UserSearchOptions) (*model.UserAutocompleteInChannel, *model.AppError) {
-	var err *model.AppError
+func (s *SearchUserStore) autocompleteUsersInChannelByEngine(engine searchengine.SearchEngineInterface, teamId, channelId, term string, options *model.UserSearchOptions) (*model.UserAutocompleteInChannel, error) {
+	var err error
 	uchanIds := []string{}
 	nuchanIds := []string{}
 	sanitizedTerm := sanitizeSearchTerm(term)
@@ -156,7 +156,7 @@ func (s *SearchUserStore) autocompleteUsersInChannelByEngine(engine searchengine
 //		- If we receive channels restrictions we get:
 //			- If we don't have team id, we get those restricted channels (guest accounts and quick search)
 //			- If we have a team id then we only return those restricted channels that belongs to that team
-func (s *SearchUserStore) getListOfAllowedChannelsForTeam(teamId string, viewRestrictions *model.ViewUsersRestrictions) ([]string, *model.AppError) {
+func (s *SearchUserStore) getListOfAllowedChannelsForTeam(teamId string, viewRestrictions *model.ViewUsersRestrictions) ([]string, error) {
 	var listOfAllowedChannels []string
 	if viewRestrictions == nil && teamId == "" {
 		// nil return without error means all channels are allowed

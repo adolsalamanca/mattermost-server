@@ -39,7 +39,7 @@ func newSqlPluginStore(sqlStore SqlStore) store.PluginStore {
 func (ps SqlPluginStore) createIndexesIfNotExists() {
 }
 
-func (ps SqlPluginStore) SaveOrUpdate(kv *model.PluginKeyValue) (*model.PluginKeyValue, *model.AppError) {
+func (ps SqlPluginStore) SaveOrUpdate(kv *model.PluginKeyValue) (*model.PluginKeyValue, error) {
 	if err := kv.IsValid(); err != nil {
 		return nil, err
 	}
@@ -58,11 +58,11 @@ func (ps SqlPluginStore) SaveOrUpdate(kv *model.PluginKeyValue) (*model.PluginKe
 		// Unfortunately PostgreSQL pre-9.5 does not have an atomic upsert, so we use
 		// separate update and insert queries to accomplish our upsert
 		if rowsAffected, err := ps.GetMaster().Update(kv); err != nil {
-			return nil, model.NewAppError("SqlPluginStore.SaveOrUpdate", "store.sql_plugin_store.save.app_error", nil, err.Error(), http.StatusInternalServerError)
+			return nil, err
 		} else if rowsAffected == 0 {
 			// No rows were affected by the update, so let's try an insert
 			if err := ps.GetMaster().Insert(kv); err != nil {
-				return nil, model.NewAppError("SqlPluginStore.SaveOrUpdate", "store.sql_plugin_store.save.app_error", nil, err.Error(), http.StatusBadRequest)
+				return nil, err
 			}
 		}
 	} else if ps.DriverName() == model.DATABASE_DRIVER_MYSQL {
@@ -74,18 +74,18 @@ func (ps SqlPluginStore) SaveOrUpdate(kv *model.PluginKeyValue) (*model.PluginKe
 
 		queryString, args, err := query.ToSql()
 		if err != nil {
-			return nil, model.NewAppError("SqlPluginStore.SaveOrUpdate", "store.sql.build_query.app_error", nil, err.Error(), http.StatusInternalServerError)
+			return nil, err
 		}
 
 		if _, err := ps.GetMaster().Exec(queryString, args...); err != nil {
-			return nil, model.NewAppError("SqlPluginStore.SaveOrUpdate", "store.sql_plugin_store.save.app_error", nil, err.Error(), http.StatusInternalServerError)
+			return nil, err
 		}
 	}
 
 	return kv, nil
 }
 
-func (ps SqlPluginStore) CompareAndSet(kv *model.PluginKeyValue, oldValue []byte) (bool, *model.AppError) {
+func (ps SqlPluginStore) CompareAndSet(kv *model.PluginKeyValue, oldValue []byte) (bool, error) {
 	if err := kv.IsValid(); err != nil {
 		return false, err
 	}
@@ -106,11 +106,11 @@ func (ps SqlPluginStore) CompareAndSet(kv *model.PluginKeyValue, oldValue []byte
 
 		queryString, args, err := query.ToSql()
 		if err != nil {
-			return false, model.NewAppError("SqlPluginStore.CompareAndSet", "store.sql.build_query.app_error", nil, err.Error(), http.StatusInternalServerError)
+			return false, err
 		}
 
 		if _, err := ps.GetMaster().Exec(queryString, args...); err != nil {
-			return false, model.NewAppError("SqlPluginStore.CompareAndSet", "store.sql_plugin_store.delete.app_error", nil, err.Error(), http.StatusInternalServerError)
+			return false, err
 		}
 
 		// Insert if oldValue is nil
@@ -121,7 +121,7 @@ func (ps SqlPluginStore) CompareAndSet(kv *model.PluginKeyValue, oldValue []byte
 			if IsUniqueConstraintError(err, []string{"PRIMARY", "PluginId", "Key", "PKey", "pkey"}) {
 				return false, nil
 			} else {
-				return false, model.NewAppError("SqlPluginStore.CompareAndSet", "store.sql_plugin_store.save.app_error", nil, err.Error(), http.StatusInternalServerError)
+				return false, err
 			}
 		}
 	} else {
@@ -142,17 +142,17 @@ func (ps SqlPluginStore) CompareAndSet(kv *model.PluginKeyValue, oldValue []byte
 
 		queryString, args, err := query.ToSql()
 		if err != nil {
-			return false, model.NewAppError("SqlPluginStore.CompareAndSet", "store.sql.build_query.app_error", nil, err.Error(), http.StatusInternalServerError)
+			return false, err
 		}
 
 		updateResult, err := ps.GetMaster().Exec(queryString, args...)
 		if err != nil {
-			return false, model.NewAppError("SqlPluginStore.CompareAndSet", "store.sql_plugin_store.save.app_error", nil, err.Error(), http.StatusInternalServerError)
+			return false, err
 		}
 
 		if rowsAffected, err := updateResult.RowsAffected(); err != nil {
 			// Failed to update
-			return false, model.NewAppError("SqlPluginStore.CompareAndSet", "store.sql_plugin_store.save.app_error", nil, err.Error(), http.StatusInternalServerError)
+			return false, err
 		} else if rowsAffected == 0 {
 			if ps.DriverName() == model.DATABASE_DRIVER_MYSQL && bytes.Equal(oldValue, kv.Value) {
 				// ROW_COUNT on MySQL is zero even if the row existed but no changes to the row were required.
@@ -173,12 +173,12 @@ func (ps SqlPluginStore) CompareAndSet(kv *model.PluginKeyValue, oldValue []byte
 
 				queryString, args, err := query.ToSql()
 				if err != nil {
-					return false, model.NewAppError("SqlPluginStore.CompareAndSet", "store.sql.build_query.app_error", nil, fmt.Sprintf("plugin_id=%v, key=%v, err=%v", kv.PluginId, kv.Key, err.Error()), http.StatusInternalServerError)
+					return false, err
 				}
 
 				count, err := ps.GetReplica().SelectInt(queryString, args...)
 				if err != nil {
-					return false, model.NewAppError("SqlPluginStore.CompareAndSet", "store.sql_plugin_store.compare_and_set.mysql_select.app_error", nil, fmt.Sprintf("plugin_id=%v, key=%v, err=%v", kv.PluginId, kv.Key, err.Error()), http.StatusInternalServerError)
+					return false, err
 				}
 
 				if count == 0 {
@@ -186,7 +186,7 @@ func (ps SqlPluginStore) CompareAndSet(kv *model.PluginKeyValue, oldValue []byte
 				} else if count == 1 {
 					return true, nil
 				} else {
-					return false, model.NewAppError("SqlPluginStore.CompareAndSet", "store.sql_plugin_store.compare_and_set.too_many_rows.app_error", nil, fmt.Sprintf("plugin_id=%v, key=%v, count=%d", kv.PluginId, kv.Key, count), http.StatusInternalServerError)
+					return false, err
 				}
 			}
 
@@ -199,7 +199,7 @@ func (ps SqlPluginStore) CompareAndSet(kv *model.PluginKeyValue, oldValue []byte
 	return true, nil
 }
 
-func (ps SqlPluginStore) CompareAndDelete(kv *model.PluginKeyValue, oldValue []byte) (bool, *model.AppError) {
+func (ps SqlPluginStore) CompareAndDelete(kv *model.PluginKeyValue, oldValue []byte) (bool, error) {
 	if err := kv.IsValid(); err != nil {
 		return false, err
 	}
@@ -221,16 +221,16 @@ func (ps SqlPluginStore) CompareAndDelete(kv *model.PluginKeyValue, oldValue []b
 
 	queryString, args, err := query.ToSql()
 	if err != nil {
-		return false, model.NewAppError("SqlPluginStore.CompareAndDelete", "store.sql.build_query.app_error", nil, err.Error(), http.StatusInternalServerError)
+		return false, err
 	}
 
 	deleteResult, err := ps.GetMaster().Exec(queryString, args...)
 	if err != nil {
-		return false, model.NewAppError("SqlPluginStore.CompareAndDelete", "store.sql_plugin_store.save.app_error", nil, err.Error(), http.StatusInternalServerError)
+		return false, err
 	}
 
 	if rowsAffected, err := deleteResult.RowsAffected(); err != nil {
-		return false, model.NewAppError("SqlPluginStore.CompareAndDelete", "store.sql_plugin_store.save.app_error", nil, err.Error(), http.StatusInternalServerError)
+		return false, err
 	} else if rowsAffected == 0 {
 		return false, nil
 	}
@@ -238,7 +238,7 @@ func (ps SqlPluginStore) CompareAndDelete(kv *model.PluginKeyValue, oldValue []b
 	return true, nil
 }
 
-func (ps SqlPluginStore) SetWithOptions(pluginId string, key string, value []byte, opt model.PluginKVSetOptions) (bool, *model.AppError) {
+func (ps SqlPluginStore) SetWithOptions(pluginId string, key string, value []byte, opt model.PluginKVSetOptions) (bool, error) {
 	if err := opt.IsValid(); err != nil {
 		return false, err
 	}
@@ -252,18 +252,18 @@ func (ps SqlPluginStore) SetWithOptions(pluginId string, key string, value []byt
 		return ps.CompareAndSet(kv, opt.OldValue)
 	}
 
-	savedKv, err := ps.SaveOrUpdate(kv)
-	if err != nil {
-		return false, err
+	savedKv, err2 := ps.SaveOrUpdate(kv)
+	if err2 != nil {
+		return false, err2
 	}
 
 	return savedKv != nil, nil
 }
 
-func (ps SqlPluginStore) Get(pluginId, key string) (*model.PluginKeyValue, *model.AppError) {
+func (ps SqlPluginStore) Get(pluginId, key string) (*model.PluginKeyValue, error) {
 	currentTime := model.GetMillis()
 
-	failure := func(err error, statusCode int) *model.AppError {
+	failure := func(err error, statusCode int) error {
 		return model.NewAppError(
 			"SqlPluginStore.Get",
 			"store.sql_plugin_store.get.app_error",
@@ -294,7 +294,7 @@ func (ps SqlPluginStore) Get(pluginId, key string) (*model.PluginKeyValue, *mode
 	return &kv, nil
 }
 
-func (ps SqlPluginStore) Delete(pluginId, key string) *model.AppError {
+func (ps SqlPluginStore) Delete(pluginId, key string) error {
 	query := ps.getQueryBuilder().
 		Delete("PluginKeyValueStore").
 		Where(sq.Eq{"PluginId": pluginId}).
@@ -302,32 +302,32 @@ func (ps SqlPluginStore) Delete(pluginId, key string) *model.AppError {
 
 	queryString, args, err := query.ToSql()
 	if err != nil {
-		return model.NewAppError("SqlPluginStore.Delete", "store.sql.build_query.app_error", nil, fmt.Sprintf("plugin_id=%v, key=%v, err=%v", pluginId, key, err.Error()), http.StatusInternalServerError)
+		return err
 	}
 
 	if _, err := ps.GetMaster().Exec(queryString, args...); err != nil {
-		return model.NewAppError("SqlPluginStore.Delete", "store.sql_plugin_store.delete.app_error", nil, fmt.Sprintf("plugin_id=%v, key=%v, err=%v", pluginId, key, err.Error()), http.StatusInternalServerError)
+		return err
 	}
 	return nil
 }
 
-func (ps SqlPluginStore) DeleteAllForPlugin(pluginId string) *model.AppError {
+func (ps SqlPluginStore) DeleteAllForPlugin(pluginId string) error {
 	query := ps.getQueryBuilder().
 		Delete("PluginKeyValueStore").
 		Where(sq.Eq{"PluginId": pluginId})
 
 	queryString, args, err := query.ToSql()
 	if err != nil {
-		return model.NewAppError("SqlPluginStore.Delete", "store.sql.build_query.app_error", nil, fmt.Sprintf("plugin_id=%v, err=%v", pluginId, err.Error()), http.StatusInternalServerError)
+		return err
 	}
 
 	if _, err := ps.GetMaster().Exec(queryString, args...); err != nil {
-		return model.NewAppError("SqlPluginStore.Delete", "store.sql_plugin_store.delete.app_error", nil, fmt.Sprintf("plugin_id=%v, err=%v", pluginId, err.Error()), http.StatusInternalServerError)
+		return err
 	}
 	return nil
 }
 
-func (ps SqlPluginStore) DeleteAllExpired() *model.AppError {
+func (ps SqlPluginStore) DeleteAllExpired() error {
 	currentTime := model.GetMillis()
 
 	query := ps.getQueryBuilder().
@@ -337,16 +337,16 @@ func (ps SqlPluginStore) DeleteAllExpired() *model.AppError {
 
 	queryString, args, err := query.ToSql()
 	if err != nil {
-		return model.NewAppError("SqlPluginStore.Delete", "store.sql.build_query.app_error", nil, fmt.Sprintf("current_time=%v, err=%v", currentTime, err.Error()), http.StatusInternalServerError)
+		return err
 	}
 
 	if _, err := ps.GetMaster().Exec(queryString, args...); err != nil {
-		return model.NewAppError("SqlPluginStore.Delete", "store.sql_plugin_store.delete.app_error", nil, fmt.Sprintf("current_time=%v, err=%v", currentTime, err.Error()), http.StatusInternalServerError)
+		return err
 	}
 	return nil
 }
 
-func (ps SqlPluginStore) List(pluginId string, offset int, limit int) ([]string, *model.AppError) {
+func (ps SqlPluginStore) List(pluginId string, offset int, limit int) ([]string, error) {
 	if limit <= 0 {
 		limit = defaultPluginKeyFetchLimit
 	}
@@ -371,12 +371,12 @@ func (ps SqlPluginStore) List(pluginId string, offset int, limit int) ([]string,
 
 	queryString, args, err := query.ToSql()
 	if err != nil {
-		return nil, model.NewAppError("SqlPluginStore.List", "store.sql.build_query.app_error", nil, fmt.Sprintf("plugin_id=%v, err=%v", pluginId, err.Error()), http.StatusInternalServerError)
+		return nil, err
 	}
 
 	_, err = ps.GetReplica().Select(&keys, queryString, args...)
 	if err != nil {
-		return nil, model.NewAppError("SqlPluginStore.List", "store.sql_plugin_store.list.app_error", nil, fmt.Sprintf("plugin_id=%v, err=%v", pluginId, err.Error()), http.StatusInternalServerError)
+		return nil, err
 	}
 
 	return keys, nil

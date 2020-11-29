@@ -4,9 +4,6 @@
 package searchlayer
 
 import (
-	"errors"
-	"net/http"
-
 	"github.com/mattermost/mattermost-server/v5/mlog"
 	"github.com/mattermost/mattermost-server/v5/model"
 	"github.com/mattermost/mattermost-server/v5/services/searchengine"
@@ -75,7 +72,7 @@ func (s SearchPostStore) deleteUserPostsIndex(userID string) {
 	}
 }
 
-func (s SearchPostStore) Update(newPost, oldPost *model.Post) (*model.Post, *model.AppError) {
+func (s SearchPostStore) Update(newPost, oldPost *model.Post) (*model.Post, error) {
 	post, err := s.PostStore.Update(newPost, oldPost)
 
 	if err == nil {
@@ -84,7 +81,7 @@ func (s SearchPostStore) Update(newPost, oldPost *model.Post) (*model.Post, *mod
 	return post, err
 }
 
-func (s *SearchPostStore) Overwrite(post *model.Post) (*model.Post, *model.AppError) {
+func (s *SearchPostStore) Overwrite(post *model.Post) (*model.Post, error) {
 	post, err := s.PostStore.Overwrite(post)
 	if err == nil {
 		s.indexPost(post)
@@ -92,7 +89,7 @@ func (s *SearchPostStore) Overwrite(post *model.Post) (*model.Post, *model.AppEr
 	return post, err
 }
 
-func (s SearchPostStore) Save(post *model.Post) (*model.Post, *model.AppError) {
+func (s SearchPostStore) Save(post *model.Post) (*model.Post, error) {
 	npost, err := s.PostStore.Save(post)
 
 	if err == nil {
@@ -101,7 +98,7 @@ func (s SearchPostStore) Save(post *model.Post) (*model.Post, *model.AppError) {
 	return npost, err
 }
 
-func (s SearchPostStore) Delete(postId string, date int64, deletedByID string) *model.AppError {
+func (s SearchPostStore) Delete(postId string, date int64, deletedByID string) error {
 	err := s.PostStore.Delete(postId, date, deletedByID)
 
 	if err == nil {
@@ -115,7 +112,7 @@ func (s SearchPostStore) Delete(postId string, date int64, deletedByID string) *
 	return err
 }
 
-func (s SearchPostStore) PermanentDeleteByUser(userID string) *model.AppError {
+func (s SearchPostStore) PermanentDeleteByUser(userID string) error {
 	err := s.PostStore.PermanentDeleteByUser(userID)
 	if err == nil {
 		s.deleteUserPostsIndex(userID)
@@ -123,7 +120,7 @@ func (s SearchPostStore) PermanentDeleteByUser(userID string) *model.AppError {
 	return err
 }
 
-func (s SearchPostStore) PermanentDeleteByChannel(channelID string) *model.AppError {
+func (s SearchPostStore) PermanentDeleteByChannel(channelID string) error {
 	err := s.PostStore.PermanentDeleteByChannel(channelID)
 	if err == nil {
 		s.deleteChannelPostsIndex(channelID)
@@ -131,19 +128,12 @@ func (s SearchPostStore) PermanentDeleteByChannel(channelID string) *model.AppEr
 	return err
 }
 
-func (s SearchPostStore) searchPostsInTeamForUserByEngine(engine searchengine.SearchEngineInterface, paramsList []*model.SearchParams, userId, teamId string, isOrSearch, includeDeletedChannels bool, page, perPage int) (*model.PostSearchResults, *model.AppError) {
+func (s SearchPostStore) searchPostsInTeamForUserByEngine(engine searchengine.SearchEngineInterface, paramsList []*model.SearchParams, userId, teamId string, isOrSearch, includeDeletedChannels bool, page, perPage int) (*model.PostSearchResults, error) {
 	// We only allow the user to search in channels they are a member of.
 	userChannels, nErr := s.rootStore.Channel().GetChannels(teamId, userId, includeDeletedChannels)
 	if nErr != nil {
 		mlog.Error("error getting channel for user", mlog.Err(nErr))
-		var nfErr *store.ErrNotFound
-		switch {
-		// TODO: This error key would go away once this store method is migrated to return plain errors
-		case errors.As(nErr, &nfErr):
-			return nil, model.NewAppError("searchPostsInTeamForUserByEngine", "app.channel.get_channels.not_found.app_error", nil, nfErr.Error(), http.StatusNotFound)
-		default:
-			return nil, model.NewAppError("searchPostsInTeamForUserByEngine", "app.channel.get_channels.get.app_error", nil, nErr.Error(), http.StatusInternalServerError)
-		}
+		return nil, nErr
 	}
 
 	postIds, matches, err := engine.SearchPosts(userChannels, paramsList, page, perPage)
@@ -169,7 +159,7 @@ func (s SearchPostStore) searchPostsInTeamForUserByEngine(engine searchengine.Se
 	return model.MakePostSearchResults(postList, matches), nil
 }
 
-func (s SearchPostStore) SearchPostsInTeamForUser(paramsList []*model.SearchParams, userId, teamId string, isOrSearch, includeDeletedChannels bool, page, perPage int) (*model.PostSearchResults, *model.AppError) {
+func (s SearchPostStore) SearchPostsInTeamForUser(paramsList []*model.SearchParams, userId, teamId string, isOrSearch, includeDeletedChannels bool, page, perPage int) (*model.PostSearchResults, error) {
 	for _, engine := range s.rootStore.searchEngine.GetActiveEngines() {
 		if engine.IsSearchEnabled() {
 			results, err := s.searchPostsInTeamForUserByEngine(engine, paramsList, userId, teamId, isOrSearch, includeDeletedChannels, page, perPage)

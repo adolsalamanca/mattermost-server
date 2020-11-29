@@ -907,7 +907,6 @@ func testChannelSaveMember(t *testing.T, ss store.Store) {
 		member := &model.ChannelMember{ChannelId: "wrong", UserId: u1.Id, NotifyProps: defaultNotifyProps}
 		_, err = ss.Channel().SaveMember(member)
 		require.NotNil(t, err)
-		require.Equal(t, "model.channel_member.is_valid.channel_id.app_error", err.Id)
 	})
 
 	t.Run("duplicated entries should fail", func(t *testing.T) {
@@ -918,7 +917,6 @@ func testChannelSaveMember(t *testing.T, ss store.Store) {
 		m2 := &model.ChannelMember{ChannelId: channelID1, UserId: u1.Id, NotifyProps: defaultNotifyProps}
 		_, err = ss.Channel().SaveMember(m2)
 		require.NotNil(t, err)
-		require.Equal(t, "store.sql_channel.save_member.exists.app_error", err.Id)
 	})
 
 	t.Run("insert member correctly (in channel without channel scheme and team without scheme)", func(t *testing.T) {
@@ -1406,7 +1404,6 @@ func testChannelSaveMultipleMembers(t *testing.T, ss store.Store) {
 		m2 := &model.ChannelMember{ChannelId: model.NewId(), UserId: u2.Id, NotifyProps: defaultNotifyProps}
 		_, err = ss.Channel().SaveMultipleMembers([]*model.ChannelMember{m1, m2})
 		require.NotNil(t, err)
-		require.Equal(t, "model.channel_member.is_valid.channel_id.app_error", err.Id)
 	})
 
 	t.Run("duplicated entries should fail", func(t *testing.T) {
@@ -1415,7 +1412,6 @@ func testChannelSaveMultipleMembers(t *testing.T, ss store.Store) {
 		m2 := &model.ChannelMember{ChannelId: channelID1, UserId: u1.Id, NotifyProps: defaultNotifyProps}
 		_, err = ss.Channel().SaveMultipleMembers([]*model.ChannelMember{m1, m2})
 		require.NotNil(t, err)
-		require.Equal(t, "store.sql_channel.save_member.exists.app_error", err.Id)
 	})
 
 	t.Run("insert members correctly (in channel without channel scheme and team without scheme)", func(t *testing.T) {
@@ -1941,7 +1937,6 @@ func testChannelUpdateMember(t *testing.T, ss store.Store) {
 		member := &model.ChannelMember{ChannelId: "wrong", UserId: u1.Id, NotifyProps: defaultNotifyProps}
 		_, err = ss.Channel().UpdateMember(member)
 		require.NotNil(t, err)
-		require.Equal(t, "model.channel_member.is_valid.channel_id.app_error", err.Id)
 	})
 
 	t.Run("insert member correctly (in channel without channel scheme and team without scheme)", func(t *testing.T) {
@@ -2435,7 +2430,6 @@ func testChannelUpdateMultipleMembers(t *testing.T, ss store.Store) {
 		m2 := &model.ChannelMember{ChannelId: model.NewId(), UserId: u2.Id, NotifyProps: defaultNotifyProps}
 		_, err = ss.Channel().SaveMultipleMembers([]*model.ChannelMember{m1, m2})
 		require.NotNil(t, err)
-		require.Equal(t, "model.channel_member.is_valid.channel_id.app_error", err.Id)
 	})
 
 	t.Run("duplicated entries should fail", func(t *testing.T) {
@@ -2444,7 +2438,6 @@ func testChannelUpdateMultipleMembers(t *testing.T, ss store.Store) {
 		m2 := &model.ChannelMember{ChannelId: channelID1, UserId: u1.Id, NotifyProps: defaultNotifyProps}
 		_, err = ss.Channel().SaveMultipleMembers([]*model.ChannelMember{m1, m2})
 		require.NotNil(t, err)
-		require.Equal(t, "store.sql_channel.save_member.exists.app_error", err.Id)
 	})
 
 	t.Run("insert members correctly (in channel without channel scheme and team without scheme)", func(t *testing.T) {
@@ -3723,7 +3716,6 @@ func testChannelStoreGetPublicChannelsByIdsForTeam(t *testing.T, ss store.Store)
 	t.Run("random channel id should not be found as a public channel in the team", func(t *testing.T) {
 		_, err := ss.Channel().GetPublicChannelsByIdsForTeam(teamId, []string{model.NewId()})
 		require.NotNil(t, err)
-		require.Equal(t, "store.sql_channel.get_channels_by_ids.not_found.app_error", err.Id)
 	})
 }
 
@@ -7367,7 +7359,7 @@ func testUpdateSidebarCategories(t *testing.T, ss store.Store, s SqlSupplier) {
 
 		res, err = ss.Preference().Get(userId, model.PREFERENCE_CATEGORY_FAVORITE_CHANNEL, channel.Id)
 		assert.NotNil(t, err)
-		assert.Equal(t, sql.ErrNoRows.Error(), err.DetailedError)
+		assert.Equal(t, sql.ErrNoRows.Error(), err)
 		assert.Nil(t, res)
 	})
 
@@ -7432,7 +7424,7 @@ func testUpdateSidebarCategories(t *testing.T, ss store.Store, s SqlSupplier) {
 
 		res, err = ss.Preference().Get(userId, model.PREFERENCE_CATEGORY_FAVORITE_CHANNEL, dmChannel.Id)
 		assert.NotNil(t, err)
-		assert.Equal(t, sql.ErrNoRows.Error(), err.DetailedError)
+		assert.Equal(t, sql.ErrNoRows.Error(), err)
 		assert.Nil(t, res)
 	})
 
@@ -7505,7 +7497,7 @@ func testUpdateSidebarCategories(t *testing.T, ss store.Store, s SqlSupplier) {
 		assert.Equal(t, "true", res.Value)
 
 		res, err = ss.Preference().Get(userId2, model.PREFERENCE_CATEGORY_FAVORITE_CHANNEL, channel.Id)
-		assert.Equal(t, sql.ErrNoRows.Error(), err.DetailedError)
+		assert.Equal(t, sql.ErrNoRows.Error(), err)
 		assert.Nil(t, res)
 
 		// And user2 favorite it
@@ -7545,7 +7537,7 @@ func testUpdateSidebarCategories(t *testing.T, ss store.Store, s SqlSupplier) {
 		assert.Nil(t, err)
 
 		res, err = ss.Preference().Get(userId, model.PREFERENCE_CATEGORY_FAVORITE_CHANNEL, channel.Id)
-		assert.Equal(t, sql.ErrNoRows.Error(), err.DetailedError)
+		assert.Equal(t, sql.ErrNoRows.Error(), err)
 		assert.Nil(t, res)
 
 		res, err = ss.Preference().Get(userId2, model.PREFERENCE_CATEGORY_FAVORITE_CHANNEL, channel.Id)
@@ -7567,11 +7559,11 @@ func testUpdateSidebarCategories(t *testing.T, ss store.Store, s SqlSupplier) {
 		assert.Nil(t, err)
 
 		res, err = ss.Preference().Get(userId, model.PREFERENCE_CATEGORY_FAVORITE_CHANNEL, channel.Id)
-		assert.Equal(t, sql.ErrNoRows.Error(), err.DetailedError)
+		assert.Equal(t, sql.ErrNoRows.Error(), err)
 		assert.Nil(t, res)
 
 		res, err = ss.Preference().Get(userId2, model.PREFERENCE_CATEGORY_FAVORITE_CHANNEL, channel.Id)
-		assert.Equal(t, sql.ErrNoRows.Error(), err.DetailedError)
+		assert.Equal(t, sql.ErrNoRows.Error(), err)
 		assert.Nil(t, res)
 	})
 

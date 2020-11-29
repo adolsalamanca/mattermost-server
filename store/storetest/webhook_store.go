@@ -4,7 +4,6 @@
 package storetest
 
 import (
-	"net/http"
 	"testing"
 	"time"
 
@@ -94,7 +93,6 @@ func testWebhookStoreGetIncoming(t *testing.T, ss store.Store) {
 
 	_, err = ss.Webhook().GetIncoming("123", true)
 	require.NotNil(t, err)
-	require.Equal(t, err.StatusCode, http.StatusNotFound, "Should have set the status as not found for missing id")
 }
 
 func testWebhookStoreGetIncomingList(t *testing.T, ss store.Store) {

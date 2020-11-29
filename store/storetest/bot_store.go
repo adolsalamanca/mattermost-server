@@ -320,7 +320,6 @@ func testBotStoreSave(t *testing.T, ss store.Store) {
 
 		_, err := ss.Bot().Save(bot)
 		require.NotNil(t, err)
-		// require.Equal(t, "model.bot.is_valid.username.app_error", err.Id)
 	})
 
 	t.Run("normal bot", func(t *testing.T) {

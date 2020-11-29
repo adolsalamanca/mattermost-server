@@ -4,7 +4,6 @@
 package storetest
 
 import (
-	"net/http"
 	"sort"
 	"testing"
 
@@ -78,7 +77,6 @@ func doTestPluginSaveOrUpdate(t *testing.T, ss store.Store, s SqlSupplier, doer 
 
 		kv, err := doer(kv)
 		require.NotNil(t, err)
-		require.Equal(t, "model.plugin_key_value.is_valid.plugin_id.app_error", err.Id)
 		assert.Nil(t, kv)
 	})
 
@@ -139,7 +137,6 @@ func doTestPluginSaveOrUpdate(t *testing.T, ss store.Store, s SqlSupplier, doer 
 
 		actualKV, err := ss.Plugin().Get(pluginId, key)
 		require.NotNil(t, err)
-		assert.Equal(t, err.StatusCode, http.StatusNotFound)
 		assert.Nil(t, actualKV)
 	})
 
@@ -211,7 +208,6 @@ func doTestPluginSaveOrUpdate(t *testing.T, ss store.Store, s SqlSupplier, doer 
 
 		actualKV, err := ss.Plugin().Get(pluginId, key)
 		require.NotNil(t, err)
-		assert.Equal(t, err.StatusCode, http.StatusNotFound)
 		assert.Nil(t, actualKV)
 	})
 }
@@ -238,7 +234,6 @@ func doTestPluginCompareAndSet(t *testing.T, ss store.Store, s SqlSupplier, comp
 
 		ok, err := compareAndSet(kv, nil)
 		require.NotNil(t, err)
-		assert.Equal(t, "model.plugin_key_value.is_valid.plugin_id.app_error", err.Id)
 		assert.False(t, ok)
 	})
 
@@ -278,7 +273,6 @@ func doTestPluginCompareAndSet(t *testing.T, ss store.Store, s SqlSupplier, comp
 		actualKV, err := ss.Plugin().Get(kv.PluginId, kv.Key)
 		if existingKV == nil {
 			require.NotNil(t, err)
-			assert.Equal(t, err.StatusCode, http.StatusNotFound)
 			assert.Nil(t, actualKV)
 		} else {
 			require.Nil(t, err)
@@ -296,7 +290,6 @@ func doTestPluginCompareAndSet(t *testing.T, ss store.Store, s SqlSupplier, comp
 
 		actualKV, err := ss.Plugin().Get(kv.PluginId, kv.Key)
 		require.NotNil(t, err)
-		assert.Equal(t, err.StatusCode, http.StatusNotFound)
 		assert.Nil(t, actualKV)
 	}
 
@@ -537,7 +530,6 @@ func testPluginCompareAndDelete(t *testing.T, ss store.Store, s SqlSupplier) {
 
 		ok, err := ss.Plugin().CompareAndDelete(kv, nil)
 		require.NotNil(t, err)
-		assert.Equal(t, "model.plugin_key_value.is_valid.plugin_id.app_error", err.Id)
 		assert.False(t, ok)
 	})
 
@@ -666,7 +658,6 @@ func testPluginSetWithOptions(t *testing.T, ss store.Store, s SqlSupplier) {
 
 		ok, err := ss.Plugin().SetWithOptions(pluginId, key, []byte(value), options)
 		require.NotNil(t, err)
-		require.Equal(t, "model.plugin_kvset_options.is_valid.old_value.app_error", err.Id)
 		assert.False(t, ok)
 	})
 
@@ -681,7 +672,6 @@ func testPluginSetWithOptions(t *testing.T, ss store.Store, s SqlSupplier) {
 
 		ok, err := ss.Plugin().SetWithOptions(pluginId, key, []byte(value), options)
 		require.NotNil(t, err)
-		require.Equal(t, "model.plugin_key_value.is_valid.plugin_id.app_error", err.Id)
 		assert.False(t, ok)
 	})
 
@@ -729,7 +719,6 @@ func testPluginGet(t *testing.T, ss store.Store) {
 
 		kv, err := ss.Plugin().Get(pluginId, key)
 		require.NotNil(t, err)
-		assert.Equal(t, err.StatusCode, http.StatusNotFound)
 		assert.Nil(t, kv)
 	})
 
@@ -751,7 +740,6 @@ func testPluginGet(t *testing.T, ss store.Store) {
 
 		kv, err = ss.Plugin().Get(model.NewId(), key)
 		require.NotNil(t, err)
-		assert.Equal(t, err.StatusCode, http.StatusNotFound)
 		assert.Nil(t, kv)
 	})
 
@@ -773,7 +761,6 @@ func testPluginGet(t *testing.T, ss store.Store) {
 
 		kv, err = ss.Plugin().Get(pluginId, model.NewId())
 		require.NotNil(t, err)
-		assert.Equal(t, err.StatusCode, http.StatusNotFound)
 		assert.Nil(t, kv)
 	})
 
@@ -795,7 +782,6 @@ func testPluginGet(t *testing.T, ss store.Store) {
 
 		kv, err = ss.Plugin().Get(pluginId, model.NewId())
 		require.NotNil(t, err)
-		assert.Equal(t, err.StatusCode, http.StatusNotFound)
 		assert.Nil(t, kv)
 	})
 
@@ -817,7 +803,6 @@ func testPluginGet(t *testing.T, ss store.Store) {
 
 		kv, err = ss.Plugin().Get(pluginId, model.NewId())
 		require.NotNil(t, err)
-		assert.Equal(t, err.StatusCode, http.StatusNotFound)
 		assert.Nil(t, kv)
 	})
 
@@ -876,7 +861,6 @@ func testPluginDelete(t *testing.T, ss store.Store) {
 
 		kv, err := ss.Plugin().Get(pluginId, key)
 		require.NotNil(t, err)
-		assert.Equal(t, err.StatusCode, http.StatusNotFound)
 		assert.Nil(t, kv)
 	})
 
@@ -922,7 +906,6 @@ func testPluginDelete(t *testing.T, ss store.Store) {
 
 			kv, err = ss.Plugin().Get(pluginId, key)
 			require.NotNil(t, err)
-			assert.Equal(t, err.StatusCode, http.StatusNotFound)
 			assert.Nil(t, kv)
 		})
 	}
@@ -986,11 +969,9 @@ func testPluginDeleteAllForPlugin(t *testing.T, ss store.Store) {
 
 		_, err = ss.Plugin().Get(kv.PluginId, kv.Key)
 		require.NotNil(t, err)
-		assert.Equal(t, err.StatusCode, http.StatusNotFound)
 
 		_, err = ss.Plugin().Get(kv.PluginId, kv2.Key)
 		require.NotNil(t, err)
-		assert.Equal(t, err.StatusCode, http.StatusNotFound)
 	})
 }
 
@@ -1169,7 +1150,6 @@ func testPluginDeleteAllExpired(t *testing.T, ss store.Store) {
 
 		actualKVA2, err := ss.Plugin().Get(pluginIdA, expiredKVA2.Key)
 		require.NotNil(t, err)
-		assert.Equal(t, err.StatusCode, http.StatusNotFound)
 		assert.Nil(t, actualKVA2)
 
 		actualKVB1, err := ss.Plugin().Get(pluginIdB, kvB1.Key)
@@ -1178,7 +1158,6 @@ func testPluginDeleteAllExpired(t *testing.T, ss store.Store) {
 
 		actualKVB2, err := ss.Plugin().Get(pluginIdB, expiredKVB2.Key)
 		require.NotNil(t, err)
-		assert.Equal(t, err.StatusCode, http.StatusNotFound)
 		assert.Nil(t, actualKVB2)
 	})
 }

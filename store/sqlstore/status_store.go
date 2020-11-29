@@ -40,22 +40,22 @@ func (s SqlStatusStore) createIndexesIfNotExists() {
 	s.CreateIndexIfNotExists("idx_status_status", "Status", "Status")
 }
 
-func (s SqlStatusStore) SaveOrUpdate(status *model.Status) *model.AppError {
+func (s SqlStatusStore) SaveOrUpdate(status *model.Status) error {
 	if err := s.GetReplica().SelectOne(&model.Status{}, "SELECT * FROM Status WHERE UserId = :UserId", map[string]interface{}{"UserId": status.UserId}); err == nil {
 		if _, err := s.GetMaster().Update(status); err != nil {
-			return model.NewAppError("SqlStatusStore.SaveOrUpdate", "store.sql_status.update.app_error", nil, err.Error(), http.StatusInternalServerError)
+			return err
 		}
 	} else {
 		if err := s.GetMaster().Insert(status); err != nil {
 			if !(strings.Contains(err.Error(), "for key 'PRIMARY'") && strings.Contains(err.Error(), "Duplicate entry")) {
-				return model.NewAppError("SqlStatusStore.SaveOrUpdate", "store.sql_status.save.app_error", nil, err.Error(), http.StatusInternalServerError)
+				return err
 			}
 		}
 	}
 	return nil
 }
 
-func (s SqlStatusStore) Get(userId string) (*model.Status, *model.AppError) {
+func (s SqlStatusStore) Get(userId string) (*model.Status, error) {
 	var status model.Status
 
 	if err := s.GetReplica().SelectOne(&status,
@@ -66,16 +66,16 @@ func (s SqlStatusStore) Get(userId string) (*model.Status, *model.AppError) {
 		WHERE
 			UserId = :UserId`, map[string]interface{}{"UserId": userId}); err != nil {
 		if err == sql.ErrNoRows {
-			return nil, model.NewAppError("SqlStatusStore.Get", MISSING_STATUS_ERROR, nil, err.Error(), http.StatusNotFound)
+			return nil, err
 		}
-		return nil, model.NewAppError("SqlStatusStore.Get", "store.sql_status.get.app_error", nil, err.Error(), http.StatusInternalServerError)
+		return nil, err
 	}
 	return &status, nil
 }
 
-func (s SqlStatusStore) GetByIds(userIds []string) ([]*model.Status, *model.AppError) {
+func (s SqlStatusStore) GetByIds(userIds []string) ([]*model.Status, error) {
 
-	failure := func(err error) *model.AppError {
+	failure := func(err error) error {
 		return model.NewAppError(
 			"SqlStatusStore.GetByIds",
 			"store.sql_status.get.app_error",
@@ -113,25 +113,25 @@ func (s SqlStatusStore) GetByIds(userIds []string) ([]*model.Status, *model.AppE
 	return statuses, nil
 }
 
-func (s SqlStatusStore) ResetAll() *model.AppError {
+func (s SqlStatusStore) ResetAll() error {
 	if _, err := s.GetMaster().Exec("UPDATE Status SET Status = :Status WHERE Manual = false", map[string]interface{}{"Status": model.STATUS_OFFLINE}); err != nil {
-		return model.NewAppError("SqlStatusStore.ResetAll", "store.sql_status.reset_all.app_error", nil, "", http.StatusInternalServerError)
+		return err
 	}
 	return nil
 }
 
-func (s SqlStatusStore) GetTotalActiveUsersCount() (int64, *model.AppError) {
+func (s SqlStatusStore) GetTotalActiveUsersCount() (int64, error) {
 	time := model.GetMillis() - (1000 * 60 * 60 * 24)
 	count, err := s.GetReplica().SelectInt("SELECT COUNT(UserId) FROM Status WHERE LastActivityAt > :Time", map[string]interface{}{"Time": time})
 	if err != nil {
-		return count, model.NewAppError("SqlStatusStore.GetTotalActiveUsersCount", "store.sql_status.get_total_active_users_count.app_error", nil, err.Error(), http.StatusInternalServerError)
+		return count, err
 	}
 	return count, nil
 }
 
-func (s SqlStatusStore) UpdateLastActivityAt(userId string, lastActivityAt int64) *model.AppError {
+func (s SqlStatusStore) UpdateLastActivityAt(userId string, lastActivityAt int64) error {
 	if _, err := s.GetMaster().Exec("UPDATE Status SET LastActivityAt = :Time WHERE UserId = :UserId", map[string]interface{}{"UserId": userId, "Time": lastActivityAt}); err != nil {
-		return model.NewAppError("SqlStatusStore.UpdateLastActivityAt", "store.sql_status.update_last_activity_at.app_error", nil, "", http.StatusInternalServerError)
+		return err
 	}
 
 	return nil
