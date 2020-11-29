@@ -6888,7 +6888,7 @@ func (s *TimerLayerUserStore) AnalyticsGetSystemAdminCount() (int64, *model.AppE
 	return resultVar0, resultVar1
 }
 
-func (s *TimerLayerUserStore) AutocompleteUsersInChannel(teamId string, channelId string, term string, options *model.UserSearchOptions) (*model.UserAutocompleteInChannel, *model.AppError) {
+func (s *TimerLayerUserStore) AutocompleteUsersInChannel(teamId string, channelId string, term string, options *model.UserSearchOptions) (*model.UserAutocompleteInChannel, error) {
 	start := timemodule.Now()
 
 	resultVar0, resultVar1 := s.UserStore.AutocompleteUsersInChannel(teamId, channelId, term, options)
@@ -6951,7 +6951,7 @@ func (s *TimerLayerUserStore) Count(options model.UserCountOptions) (int64, *mod
 	return resultVar0, resultVar1
 }
 
-func (s *TimerLayerUserStore) DeactivateGuests() ([]string, *model.AppError) {
+func (s *TimerLayerUserStore) DeactivateGuests() ([]string, error) {
 	start := timemodule.Now()
 
 	resultVar0, resultVar1 := s.UserStore.DeactivateGuests()
@@ -6967,7 +6967,7 @@ func (s *TimerLayerUserStore) DeactivateGuests() ([]string, *model.AppError) {
 	return resultVar0, resultVar1
 }
 
-func (s *TimerLayerUserStore) DemoteUserToGuest(userID string) *model.AppError {
+func (s *TimerLayerUserStore) DemoteUserToGuest(userID string) error {
 	start := timemodule.Now()
 
 	resultVar0 := s.UserStore.DemoteUserToGuest(userID)
@@ -7239,7 +7239,7 @@ func (s *TimerLayerUserStore) GetForLogin(loginId string, allowSignInWithUsernam
 	return resultVar0, resultVar1
 }
 
-func (s *TimerLayerUserStore) GetKnownUsers(userID string) ([]string, *model.AppError) {
+func (s *TimerLayerUserStore) GetKnownUsers(userID string) ([]string, error) {
 	start := timemodule.Now()
 
 	resultVar0, resultVar1 := s.UserStore.GetKnownUsers(userID)

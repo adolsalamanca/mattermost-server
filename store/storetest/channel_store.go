@@ -5058,7 +5058,7 @@ func testChannelStoreSearchInTeam(t *testing.T, ss store.Store, s SqlSupplier) {
 		{"pipe ignored", teamId, "town square |", false, &model.ChannelList{&o9}},
 	}
 
-	for name, search := range map[string]func(teamId string, term string, includeDeleted bool) (*model.ChannelList, *model.AppError){
+	for name, search := range map[string]func(teamId string, term string, includeDeleted bool) (*model.ChannelList, error){
 		"AutocompleteInTeam": ss.Channel().AutocompleteInTeam,
 		"SearchInTeam":       ss.Channel().SearchInTeam,
 	} {
@@ -6142,8 +6142,8 @@ func testMaterializedPublicChannels(t *testing.T, ss store.Store, s SqlSupplier)
 	})
 
 	o2.Type = model.CHANNEL_PRIVATE
-	_, appErr := ss.Channel().Update(&o2)
-	require.Nil(t, appErr)
+	_, err := ss.Channel().Update(&o2)
+	require.Nil(t, err)
 
 	t.Run("o2 no longer listed since now private", func(t *testing.T) {
 		channels, channelErr := ss.Channel().SearchInTeam(teamId, "", true)
@@ -6152,8 +6152,8 @@ func testMaterializedPublicChannels(t *testing.T, ss store.Store, s SqlSupplier)
 	})
 
 	o2.Type = model.CHANNEL_OPEN
-	_, appErr = ss.Channel().Update(&o2)
-	require.Nil(t, appErr)
+	_, err = ss.Channel().Update(&o2)
+	require.Nil(t, err)
 
 	t.Run("o2 listed once again since now public", func(t *testing.T) {
 		channels, channelErr := ss.Channel().SearchInTeam(teamId, "", true)
@@ -6239,8 +6239,8 @@ func testMaterializedPublicChannels(t *testing.T, ss store.Store, s SqlSupplier)
 	require.Nil(t, execerr)
 
 	o4.DisplayName += " - Modified"
-	_, appErr = ss.Channel().Update(&o4)
-	require.Nil(t, appErr)
+	_, err = ss.Channel().Update(&o4)
+	require.Nil(t, err)
 
 	t.Run("verify o4 UPDATE converted to INSERT", func(t *testing.T) {
 		channels, err := ss.Channel().SearchInTeam(teamId, "", true)
@@ -6679,8 +6679,8 @@ func testGroupSyncedChannelCount(t *testing.T, ss store.Store) {
 	require.False(t, channel2.IsGroupConstrained())
 	defer ss.Channel().PermanentDelete(channel2.Id)
 
-	count, appErr := ss.Channel().GroupSyncedChannelCount()
-	require.Nil(t, appErr)
+	count, err2 := ss.Channel().GroupSyncedChannelCount()
+	require.Nil(t, err2)
 	require.GreaterOrEqual(t, count, int64(1))
 
 	channel2.GroupConstrained = model.NewBool(true)
@@ -6688,8 +6688,8 @@ func testGroupSyncedChannelCount(t *testing.T, ss store.Store) {
 	require.Nil(t, err)
 	require.True(t, channel2.IsGroupConstrained())
 
-	countAfter, appErr := ss.Channel().GroupSyncedChannelCount()
-	require.Nil(t, appErr)
+	countAfter, err2 := ss.Channel().GroupSyncedChannelCount()
+	require.Nil(t, err2)
 	require.GreaterOrEqual(t, countAfter, count+1)
 }
 

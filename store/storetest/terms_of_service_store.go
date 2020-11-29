@@ -23,8 +23,8 @@ func testSaveTermsOfService(t *testing.T, ss store.Store) {
 	u1.Username = model.NewId()
 	u1.Email = MakeEmail()
 	u1.Nickname = model.NewId()
-	_, appErr := ss.User().Save(&u1)
-	require.Nil(t, appErr)
+	_, errSave := ss.User().Save(&u1)
+	require.Nil(t, errSave)
 
 	termsOfService := &model.TermsOfService{Text: "terms of service", UserId: u1.Id}
 	savedTermsOfService, err := ss.TermsOfService().Save(termsOfService)
@@ -40,8 +40,8 @@ func testGetLatestTermsOfService(t *testing.T, ss store.Store) {
 	u1.Username = model.NewId()
 	u1.Email = MakeEmail()
 	u1.Nickname = model.NewId()
-	_, appErr := ss.User().Save(&u1)
-	require.Nil(t, appErr)
+	_, errSave := ss.User().Save(&u1)
+	require.Nil(t, errSave)
 
 	termsOfService := &model.TermsOfService{Text: "terms of service", UserId: u1.Id}
 	_, err := ss.TermsOfService().Save(termsOfService)
@@ -58,8 +58,8 @@ func testGetTermsOfService(t *testing.T, ss store.Store) {
 	u1.Username = model.NewId()
 	u1.Email = MakeEmail()
 	u1.Nickname = model.NewId()
-	_, appErr := ss.User().Save(&u1)
-	require.Nil(t, appErr)
+	_, errSave := ss.User().Save(&u1)
+	require.Nil(t, errSave)
 
 	termsOfService := &model.TermsOfService{Text: "terms of service", UserId: u1.Id}
 	_, err := ss.TermsOfService().Save(termsOfService)

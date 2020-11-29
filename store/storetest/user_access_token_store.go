@@ -49,8 +49,8 @@ func testUserAccessTokenSaveGetDelete(t *testing.T, ss store.Store) {
 	require.Nil(t, err2)
 	require.Equal(t, 1, len(received2), "received incorrect number of tokens after save")
 
-	result2, appError := ss.UserAccessToken().GetAll(0, 100)
-	require.Nil(t, appError)
+	result2, err3 := ss.UserAccessToken().GetAll(0, 100)
+	require.Nil(t, err3)
 	require.Equal(t, 1, len(result2), "received incorrect number of tokens after save")
 
 	err = ss.UserAccessToken().Delete(uat.Id)

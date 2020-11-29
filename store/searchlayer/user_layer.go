@@ -190,7 +190,7 @@ func (s *SearchUserStore) getListOfAllowedChannelsForTeam(teamId string, viewRes
 	return []string{}, nil
 }
 
-func (s *SearchUserStore) AutocompleteUsersInChannel(teamId, channelId, term string, options *model.UserSearchOptions) (*model.UserAutocompleteInChannel, *model.AppError) {
+func (s *SearchUserStore) AutocompleteUsersInChannel(teamId, channelId, term string, options *model.UserSearchOptions) (*model.UserAutocompleteInChannel, error) {
 	for _, engine := range s.rootStore.searchEngine.GetActiveEngines() {
 		if engine.IsAutocompletionEnabled() {
 			listOfAllowedChannels, err := s.getListOfAllowedChannelsForTeam(teamId, options.ViewRestrictions)

@@ -15,7 +15,7 @@ type RoleStore struct {
 }
 
 // AllChannelSchemeRoles provides a mock function with given fields:
-func (_m *RoleStore) AllChannelSchemeRoles() ([]*model.Role, *model.AppError) {
+func (_m *RoleStore) AllChannelSchemeRoles() ([]*model.Role, error) {
 	ret := _m.Called()
 
 	var r0 []*model.Role
@@ -27,12 +27,12 @@ func (_m *RoleStore) AllChannelSchemeRoles() ([]*model.Role, *model.AppError) {
 		}
 	}
 
-	var r1 *model.AppError
-	if rf, ok := ret.Get(1).(func() *model.AppError); ok {
+	var r1 error
+	if rf, ok := ret.Get(1).(func() error); ok {
 		r1 = rf()
 	} else {
 		if ret.Get(1) != nil {
-			r1 = ret.Get(1).(*model.AppError)
+			r1 = ret.Get(1).(error)
 		}
 	}
 
@@ -40,7 +40,7 @@ func (_m *RoleStore) AllChannelSchemeRoles() ([]*model.Role, *model.AppError) {
 }
 
 // ChannelHigherScopedPermissions provides a mock function with given fields: roleNames
-func (_m *RoleStore) ChannelHigherScopedPermissions(roleNames []string) (map[string]*model.RolePermissions, *model.AppError) {
+func (_m *RoleStore) ChannelHigherScopedPermissions(roleNames []string) (map[string]*model.RolePermissions, error) {
 	ret := _m.Called(roleNames)
 
 	var r0 map[string]*model.RolePermissions
@@ -52,12 +52,12 @@ func (_m *RoleStore) ChannelHigherScopedPermissions(roleNames []string) (map[str
 		}
 	}
 
-	var r1 *model.AppError
-	if rf, ok := ret.Get(1).(func([]string) *model.AppError); ok {
+	var r1 error
+	if rf, ok := ret.Get(1).(func([]string) error); ok {
 		r1 = rf(roleNames)
 	} else {
 		if ret.Get(1) != nil {
-			r1 = ret.Get(1).(*model.AppError)
+			r1 = ret.Get(1).(error)
 		}
 	}
 
@@ -65,7 +65,7 @@ func (_m *RoleStore) ChannelHigherScopedPermissions(roleNames []string) (map[str
 }
 
 // ChannelRolesUnderTeamRole provides a mock function with given fields: roleName
-func (_m *RoleStore) ChannelRolesUnderTeamRole(roleName string) ([]*model.Role, *model.AppError) {
+func (_m *RoleStore) ChannelRolesUnderTeamRole(roleName string) ([]*model.Role, error) {
 	ret := _m.Called(roleName)
 
 	var r0 []*model.Role
@@ -77,12 +77,12 @@ func (_m *RoleStore) ChannelRolesUnderTeamRole(roleName string) ([]*model.Role, 
 		}
 	}
 
-	var r1 *model.AppError
-	if rf, ok := ret.Get(1).(func(string) *model.AppError); ok {
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string) error); ok {
 		r1 = rf(roleName)
 	} else {
 		if ret.Get(1) != nil {
-			r1 = ret.Get(1).(*model.AppError)
+			r1 = ret.Get(1).(error)
 		}
 	}
 
@@ -90,7 +90,7 @@ func (_m *RoleStore) ChannelRolesUnderTeamRole(roleName string) ([]*model.Role, 
 }
 
 // Delete provides a mock function with given fields: roleId
-func (_m *RoleStore) Delete(roleId string) (*model.Role, *model.AppError) {
+func (_m *RoleStore) Delete(roleId string) (*model.Role, error) {
 	ret := _m.Called(roleId)
 
 	var r0 *model.Role
@@ -102,12 +102,12 @@ func (_m *RoleStore) Delete(roleId string) (*model.Role, *model.AppError) {
 		}
 	}
 
-	var r1 *model.AppError
-	if rf, ok := ret.Get(1).(func(string) *model.AppError); ok {
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string) error); ok {
 		r1 = rf(roleId)
 	} else {
 		if ret.Get(1) != nil {
-			r1 = ret.Get(1).(*model.AppError)
+			r1 = ret.Get(1).(error)
 		}
 	}
 
@@ -115,7 +115,7 @@ func (_m *RoleStore) Delete(roleId string) (*model.Role, *model.AppError) {
 }
 
 // Get provides a mock function with given fields: roleId
-func (_m *RoleStore) Get(roleId string) (*model.Role, *model.AppError) {
+func (_m *RoleStore) Get(roleId string) (*model.Role, error) {
 	ret := _m.Called(roleId)
 
 	var r0 *model.Role
@@ -127,12 +127,12 @@ func (_m *RoleStore) Get(roleId string) (*model.Role, *model.AppError) {
 		}
 	}
 
-	var r1 *model.AppError
-	if rf, ok := ret.Get(1).(func(string) *model.AppError); ok {
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string) error); ok {
 		r1 = rf(roleId)
 	} else {
 		if ret.Get(1) != nil {
-			r1 = ret.Get(1).(*model.AppError)
+			r1 = ret.Get(1).(error)
 		}
 	}
 
@@ -140,7 +140,7 @@ func (_m *RoleStore) Get(roleId string) (*model.Role, *model.AppError) {
 }
 
 // GetAll provides a mock function with given fields:
-func (_m *RoleStore) GetAll() ([]*model.Role, *model.AppError) {
+func (_m *RoleStore) GetAll() ([]*model.Role, error) {
 	ret := _m.Called()
 
 	var r0 []*model.Role
@@ -152,12 +152,12 @@ func (_m *RoleStore) GetAll() ([]*model.Role, *model.AppError) {
 		}
 	}
 
-	var r1 *model.AppError
-	if rf, ok := ret.Get(1).(func() *model.AppError); ok {
+	var r1 error
+	if rf, ok := ret.Get(1).(func() error); ok {
 		r1 = rf()
 	} else {
 		if ret.Get(1) != nil {
-			r1 = ret.Get(1).(*model.AppError)
+			r1 = ret.Get(1).(error)
 		}
 	}
 
@@ -165,7 +165,7 @@ func (_m *RoleStore) GetAll() ([]*model.Role, *model.AppError) {
 }
 
 // GetByName provides a mock function with given fields: name
-func (_m *RoleStore) GetByName(name string) (*model.Role, *model.AppError) {
+func (_m *RoleStore) GetByName(name string) (*model.Role, error) {
 	ret := _m.Called(name)
 
 	var r0 *model.Role
@@ -177,12 +177,12 @@ func (_m *RoleStore) GetByName(name string) (*model.Role, *model.AppError) {
 		}
 	}
 
-	var r1 *model.AppError
-	if rf, ok := ret.Get(1).(func(string) *model.AppError); ok {
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string) error); ok {
 		r1 = rf(name)
 	} else {
 		if ret.Get(1) != nil {
-			r1 = ret.Get(1).(*model.AppError)
+			r1 = ret.Get(1).(error)
 		}
 	}
 
@@ -190,7 +190,7 @@ func (_m *RoleStore) GetByName(name string) (*model.Role, *model.AppError) {
 }
 
 // GetByNames provides a mock function with given fields: names
-func (_m *RoleStore) GetByNames(names []string) ([]*model.Role, *model.AppError) {
+func (_m *RoleStore) GetByNames(names []string) ([]*model.Role, error) {
 	ret := _m.Called(names)
 
 	var r0 []*model.Role
@@ -202,12 +202,12 @@ func (_m *RoleStore) GetByNames(names []string) ([]*model.Role, *model.AppError)
 		}
 	}
 
-	var r1 *model.AppError
-	if rf, ok := ret.Get(1).(func([]string) *model.AppError); ok {
+	var r1 error
+	if rf, ok := ret.Get(1).(func([]string) error); ok {
 		r1 = rf(names)
 	} else {
 		if ret.Get(1) != nil {
-			r1 = ret.Get(1).(*model.AppError)
+			r1 = ret.Get(1).(error)
 		}
 	}
 
@@ -215,15 +215,15 @@ func (_m *RoleStore) GetByNames(names []string) ([]*model.Role, *model.AppError)
 }
 
 // PermanentDeleteAll provides a mock function with given fields:
-func (_m *RoleStore) PermanentDeleteAll() *model.AppError {
+func (_m *RoleStore) PermanentDeleteAll() error {
 	ret := _m.Called()
 
-	var r0 *model.AppError
-	if rf, ok := ret.Get(0).(func() *model.AppError); ok {
+	var r0 error
+	if rf, ok := ret.Get(0).(func() error); ok {
 		r0 = rf()
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*model.AppError)
+			r0 = ret.Get(0).(error)
 		}
 	}
 
@@ -231,7 +231,7 @@ func (_m *RoleStore) PermanentDeleteAll() *model.AppError {
 }
 
 // Save provides a mock function with given fields: role
-func (_m *RoleStore) Save(role *model.Role) (*model.Role, *model.AppError) {
+func (_m *RoleStore) Save(role *model.Role) (*model.Role, error) {
 	ret := _m.Called(role)
 
 	var r0 *model.Role
@@ -243,12 +243,12 @@ func (_m *RoleStore) Save(role *model.Role) (*model.Role, *model.AppError) {
 		}
 	}
 
-	var r1 *model.AppError
-	if rf, ok := ret.Get(1).(func(*model.Role) *model.AppError); ok {
+	var r1 error
+	if rf, ok := ret.Get(1).(func(*model.Role) error); ok {
 		r1 = rf(role)
 	} else {
 		if ret.Get(1) != nil {
-			r1 = ret.Get(1).(*model.AppError)
+			r1 = ret.Get(1).(error)
 		}
 	}
 

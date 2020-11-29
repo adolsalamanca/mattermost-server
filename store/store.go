@@ -73,8 +73,8 @@ type Store interface {
 }
 
 type TeamStore interface {
-	Save(team *model.Team) (*model.Team, *model.AppError)
-	Update(team *model.Team) (*model.Team, *model.AppError)
+	Save(team *model.Team) (*model.Team, error)
+	Update(team *model.Team) (*model.Team, error)
 	Get(id string) (*model.Team, *model.AppError)
 	GetByName(name string) (*model.Team, *model.AppError)
 	GetByNames(name []string) ([]*model.Team, *model.AppError)
@@ -96,7 +96,7 @@ type TeamStore interface {
 	AnalyticsPublicTeamCount() (int64, *model.AppError)
 	AnalyticsPrivateTeamCount() (int64, *model.AppError)
 	SaveMultipleMembers(members []*model.TeamMember, maxUsersPerTeam int) ([]*model.TeamMember, *model.AppError)
-	SaveMember(member *model.TeamMember, maxUsersPerTeam int) (*model.TeamMember, *model.AppError)
+	SaveMember(member *model.TeamMember, maxUsersPerTeam int) (*model.TeamMember, error)
 	UpdateMember(member *model.TeamMember) (*model.TeamMember, *model.AppError)
 	UpdateMultipleMembers(members []*model.TeamMember) ([]*model.TeamMember, *model.AppError)
 	GetMember(teamId string, userId string) (*model.TeamMember, *model.AppError)
@@ -167,7 +167,7 @@ type ChannelStore interface {
 	GetChannelsByIds(channelIds []string, includeDeleted bool) ([]*model.Channel, *model.AppError)
 	GetForPost(postId string) (*model.Channel, *model.AppError)
 	SaveMultipleMembers(members []*model.ChannelMember) ([]*model.ChannelMember, *model.AppError)
-	SaveMember(member *model.ChannelMember) (*model.ChannelMember, *model.AppError)
+	SaveMember(member *model.ChannelMember) (*model.ChannelMember, error)
 	UpdateMember(member *model.ChannelMember) (*model.ChannelMember, *model.AppError)
 	UpdateMultipleMembers(members []*model.ChannelMember) ([]*model.ChannelMember, *model.AppError)
 	GetMembers(channelId string, offset, limit int) (*model.ChannelMembers, *model.AppError)
@@ -292,7 +292,7 @@ type PostStore interface {
 }
 
 type UserStore interface {
-	Save(user *model.User) (*model.User, *model.AppError)
+	Save(user *model.User) (*model.User, error)
 	Update(user *model.User, allowRoleUpdate bool) (*model.UserUpdate, *model.AppError)
 	UpdateLastPictureUpdate(userId string) *model.AppError
 	ResetLastPictureUpdate(userId string) *model.AppError
@@ -335,7 +335,7 @@ type UserStore interface {
 	GetAnyUnreadPostCountForChannel(userId string, channelId string) (int64, *model.AppError)
 	GetRecentlyActiveUsersForTeam(teamId string, offset, limit int, viewRestrictions *model.ViewUsersRestrictions) ([]*model.User, *model.AppError)
 	GetNewUsersForTeam(teamId string, offset, limit int, viewRestrictions *model.ViewUsersRestrictions) ([]*model.User, *model.AppError)
-	Search(teamId string, term string, options *model.UserSearchOptions) ([]*model.User, *model.AppError)
+	Search(teamId string, term string, options *model.UserSearchOptions) ([]*model.User, error)
 	SearchNotInTeam(notInTeamId string, term string, options *model.UserSearchOptions) ([]*model.User, *model.AppError)
 	SearchInChannel(channelId string, term string, options *model.UserSearchOptions) ([]*model.User, *model.AppError)
 	SearchNotInChannel(teamId string, channelId string, term string, options *model.UserSearchOptions) ([]*model.User, *model.AppError)
@@ -351,13 +351,13 @@ type UserStore interface {
 	GetAllAfter(limit int, afterId string) ([]*model.User, *model.AppError)
 	GetUsersBatchForIndexing(startTime, endTime int64, limit int) ([]*model.UserForIndexing, *model.AppError)
 	Count(options model.UserCountOptions) (int64, *model.AppError)
-	GetTeamGroupUsers(teamID string) ([]*model.User, *model.AppError)
+	GetTeamGroupUsers(teamID string) ([]*model.User, error)
 	GetChannelGroupUsers(channelID string) ([]*model.User, *model.AppError)
 	PromoteGuestToUser(userID string) *model.AppError
-	DemoteUserToGuest(userID string) *model.AppError
-	DeactivateGuests() ([]string, *model.AppError)
-	AutocompleteUsersInChannel(teamId, channelId, term string, options *model.UserSearchOptions) (*model.UserAutocompleteInChannel, *model.AppError)
-	GetKnownUsers(userID string) ([]string, *model.AppError)
+	DemoteUserToGuest(userID string) error
+	DeactivateGuests() ([]string, error)
+	AutocompleteUsersInChannel(teamId, channelId, term string, options *model.UserSearchOptions) (*model.UserAutocompleteInChannel, error)
+	GetKnownUsers(userID string) ([]string, error)
 }
 
 type BotStore interface {
@@ -665,11 +665,11 @@ type GroupStore interface {
 	GetMemberUsersInTeam(groupID string, teamID string) ([]*model.User, *model.AppError)
 	GetMemberUsersNotInChannel(groupID string, channelID string) ([]*model.User, *model.AppError)
 
-	UpsertMember(groupID string, userID string) (*model.GroupMember, *model.AppError)
+	UpsertMember(groupID string, userID string) (*model.GroupMember, error)
 	DeleteMember(groupID string, userID string) (*model.GroupMember, *model.AppError)
 	PermanentDeleteMembersByUser(userId string) *model.AppError
 
-	CreateGroupSyncable(groupSyncable *model.GroupSyncable) (*model.GroupSyncable, *model.AppError)
+	CreateGroupSyncable(groupSyncable *model.GroupSyncable) (*model.GroupSyncable, error)
 	GetGroupSyncable(groupID string, syncableID string, syncableType model.GroupSyncableType) (*model.GroupSyncable, *model.AppError)
 	GetAllGroupSyncablesByGroupId(groupID string, syncableType model.GroupSyncableType) ([]*model.GroupSyncable, *model.AppError)
 	UpdateGroupSyncable(groupSyncable *model.GroupSyncable) (*model.GroupSyncable, *model.AppError)

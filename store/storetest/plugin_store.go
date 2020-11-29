@@ -64,7 +64,7 @@ func setupKVs(t *testing.T, ss store.Store) (string, func()) {
 	}
 }
 
-func doTestPluginSaveOrUpdate(t *testing.T, ss store.Store, s SqlSupplier, doer func(kv *model.PluginKeyValue) (*model.PluginKeyValue, *model.AppError)) {
+func doTestPluginSaveOrUpdate(t *testing.T, ss store.Store, s SqlSupplier, doer func(kv *model.PluginKeyValue) (*model.PluginKeyValue, error)) {
 	t.Run("invalid kv", func(t *testing.T) {
 		_, tearDown := setupKVs(t, ss)
 		defer tearDown()
@@ -217,14 +217,14 @@ func doTestPluginSaveOrUpdate(t *testing.T, ss store.Store, s SqlSupplier, doer 
 }
 
 func testPluginSaveOrUpdate(t *testing.T, ss store.Store, s SqlSupplier) {
-	doTestPluginSaveOrUpdate(t, ss, s, func(kv *model.PluginKeyValue) (*model.PluginKeyValue, *model.AppError) {
+	doTestPluginSaveOrUpdate(t, ss, s, func(kv *model.PluginKeyValue) (*model.PluginKeyValue, error) {
 		return ss.Plugin().SaveOrUpdate(kv)
 	})
 }
 
 // doTestPluginCompareAndSet exercises the CompareAndSet functionality, but abstracts the actual
 // call to same to allow reuse with SetWithOptions
-func doTestPluginCompareAndSet(t *testing.T, ss store.Store, s SqlSupplier, compareAndSet func(kv *model.PluginKeyValue, oldValue []byte) (bool, *model.AppError)) {
+func doTestPluginCompareAndSet(t *testing.T, ss store.Store, s SqlSupplier, compareAndSet func(kv *model.PluginKeyValue, oldValue []byte) (bool, error)) {
 	t.Run("invalid kv", func(t *testing.T) {
 		_, tearDown := setupKVs(t, ss)
 		defer tearDown()
@@ -518,7 +518,7 @@ func doTestPluginCompareAndSet(t *testing.T, ss store.Store, s SqlSupplier, comp
 }
 
 func testPluginCompareAndSet(t *testing.T, ss store.Store, s SqlSupplier) {
-	doTestPluginCompareAndSet(t, ss, s, func(kv *model.PluginKeyValue, oldValue []byte) (bool, *model.AppError) {
+	doTestPluginCompareAndSet(t, ss, s, func(kv *model.PluginKeyValue, oldValue []byte) (bool, error) {
 		return ss.Plugin().CompareAndSet(kv, oldValue)
 	})
 }
@@ -686,7 +686,7 @@ func testPluginSetWithOptions(t *testing.T, ss store.Store, s SqlSupplier) {
 	})
 
 	t.Run("atomic", func(t *testing.T) {
-		doTestPluginCompareAndSet(t, ss, s, func(kv *model.PluginKeyValue, oldValue []byte) (bool, *model.AppError) {
+		doTestPluginCompareAndSet(t, ss, s, func(kv *model.PluginKeyValue, oldValue []byte) (bool, error) {
 			now := model.GetMillis()
 			options := model.PluginKVSetOptions{
 				Atomic:   true,
@@ -702,7 +702,7 @@ func testPluginSetWithOptions(t *testing.T, ss store.Store, s SqlSupplier) {
 	})
 
 	t.Run("non-atomic", func(t *testing.T) {
-		doTestPluginSaveOrUpdate(t, ss, s, func(kv *model.PluginKeyValue) (*model.PluginKeyValue, *model.AppError) {
+		doTestPluginSaveOrUpdate(t, ss, s, func(kv *model.PluginKeyValue) (*model.PluginKeyValue, error) {
 			now := model.GetMillis()
 			options := model.PluginKVSetOptions{
 				Atomic: false,
@@ -712,11 +712,11 @@ func testPluginSetWithOptions(t *testing.T, ss store.Store, s SqlSupplier) {
 				options.ExpireInSeconds = (kv.ExpireAt - now) / 1000
 			}
 
-			ok, appErr := ss.Plugin().SetWithOptions(kv.PluginId, kv.Key, kv.Value, options)
+			ok, err := ss.Plugin().SetWithOptions(kv.PluginId, kv.Key, kv.Value, options)
 			if !ok {
-				return nil, appErr
+				return nil, err
 			} else {
-				return kv, appErr
+				return kv, err
 			}
 		})
 	})

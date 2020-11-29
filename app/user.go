@@ -1007,7 +1007,7 @@ func (a *App) UpdateActive(user *model.User, active bool) (*model.User, *model.A
 	return ruser, nil
 }
 
-func (a *App) DeactivateGuests() *model.AppError {
+func (a *App) DeactivateGuests() error {
 	userIds, err := a.Srv().Store.User().DeactivateGuests()
 	if err != nil {
 		return err
@@ -1784,7 +1784,7 @@ func (a *App) SearchUsersInGroup(groupID string, term string, options *model.Use
 	return users, nil
 }
 
-func (a *App) AutocompleteUsersInChannel(teamId string, channelId string, term string, options *model.UserSearchOptions) (*model.UserAutocompleteInChannel, *model.AppError) {
+func (a *App) AutocompleteUsersInChannel(teamId string, channelId string, term string, options *model.UserSearchOptions) (*model.UserAutocompleteInChannel, error) {
 	term = strings.TrimSpace(term)
 
 	autocomplete, err := a.Srv().Store.User().AutocompleteUsersInChannel(teamId, channelId, term, options)
@@ -2137,7 +2137,7 @@ func (a *App) invalidateUserCacheAndPublish(userId string) {
 // GetKnownUsers returns the list of user ids of users with any direct
 // relationship with a user. That means any user sharing any channel, including
 // direct and group channels.
-func (a *App) GetKnownUsers(userID string) ([]string, *model.AppError) {
+func (a *App) GetKnownUsers(userID string) ([]string, error) {
 	return a.Srv().Store.User().GetKnownUsers(userID)
 }
 

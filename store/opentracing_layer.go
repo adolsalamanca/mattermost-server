@@ -7630,7 +7630,7 @@ func (s *OpenTracingLayerUserStore) AnalyticsGetSystemAdminCount() (int64, *mode
 	return resultVar0, resultVar1
 }
 
-func (s *OpenTracingLayerUserStore) AutocompleteUsersInChannel(teamId string, channelId string, term string, options *model.UserSearchOptions) (*model.UserAutocompleteInChannel, *model.AppError) {
+func (s *OpenTracingLayerUserStore) AutocompleteUsersInChannel(teamId string, channelId string, term string, options *model.UserSearchOptions) (*model.UserAutocompleteInChannel, error) {
 	origCtx := s.Root.Store.Context()
 	span, newCtx := tracing.StartSpanWithParentByContext(s.Root.Store.Context(), "UserStore.AutocompleteUsersInChannel")
 	s.Root.Store.SetContext(newCtx)
@@ -7697,7 +7697,7 @@ func (s *OpenTracingLayerUserStore) Count(options model.UserCountOptions) (int64
 	return resultVar0, resultVar1
 }
 
-func (s *OpenTracingLayerUserStore) DeactivateGuests() ([]string, *model.AppError) {
+func (s *OpenTracingLayerUserStore) DeactivateGuests() ([]string, error) {
 	origCtx := s.Root.Store.Context()
 	span, newCtx := tracing.StartSpanWithParentByContext(s.Root.Store.Context(), "UserStore.DeactivateGuests")
 	s.Root.Store.SetContext(newCtx)
@@ -8006,7 +8006,7 @@ func (s *OpenTracingLayerUserStore) GetForLogin(loginId string, allowSignInWithU
 	return resultVar0, resultVar1
 }
 
-func (s *OpenTracingLayerUserStore) GetKnownUsers(userID string) ([]string, *model.AppError) {
+func (s *OpenTracingLayerUserStore) GetKnownUsers(userID string) ([]string, error) {
 	origCtx := s.Root.Store.Context()
 	span, newCtx := tracing.StartSpanWithParentByContext(s.Root.Store.Context(), "UserStore.GetKnownUsers")
 	s.Root.Store.SetContext(newCtx)
